@@ -1,0 +1,27 @@
+Meeting: Meridian Logistics - Midpoint Milestone & Architecture Revision
+Date: March 20, 2026
+Attendees:
+- Marcus Vance, VP of Technology (Meridian Logistics)
+- Elena Rostova, Product Director (Meridian Logistics)
+- Jordan Lee, Account Director (Agency)
+- Priya Patel, Technical Architect (Agency)
+
+TRANSCRIPT:
+
+Jordan Lee (Agency): Thanks for getting together for our Sprint 5 midpoint milestone review. We have two key items to cover today: timeline status and our IoT telemetry ingestion volume.
+
+Elena Rostova (Meridian): Let me start with the schedule update. As our executive board finalized our global logistics partner rollout, our compliance audit window shifted. Consequently, our official portal launch date has been moved from May 15, 2026 to June 30, 2026. This gives us six additional weeks for end-to-end load testing.
+
+Jordan Lee (Agency): Got it. Official launch date is now June 30, 2026, replacing our original May 15 deadline.
+
+Priya Patel (Agency): Let's talk about the telemetry feed. With 4,500 fleet vehicles emitting GPS and sensor pings every two seconds, standard relational queries in Aurora PostgreSQL are experiencing high indexing overhead.
+
+Marcus Vance (Meridian): We anticipated this. We want to keep AWS Aurora PostgreSQL as the single source of truth for user accounts and transactional shipment orders. However, for the vehicle telemetry and time-series sensor stream, we have approved enabling the TimescaleDB extension on PostgreSQL. Do not spin up a separate NoSQL cluster; stay within the PostgreSQL ecosystem using TimescaleDB.
+
+Jordan Lee (Agency): That makes complete sense. We will enable TimescaleDB for time-series telematics while keeping core tables in Aurora PostgreSQL. One last governance item: what is the approval workflow for creative sprint adjustments?
+
+Marcus Vance (Meridian): To eliminate bottlenecks, Elena Rostova is now officially delegated budget sign-off authority for design assets and minor feature scope adjustments up to $5,000. Anything above $5,000 still requires my explicit approval.
+
+Elena Rostova (Meridian): Perfect. That allows us to approve UI micro-copy and icon sets without waiting for Marcus's travel schedule.
+
+Jordan Lee (Agency): Excellent. Summary of updates: Launch is rescheduled to June 30, 2026; vehicle telematics will use TimescaleDB within PostgreSQL; and Elena now has $5,000 approval authority for creative scope.

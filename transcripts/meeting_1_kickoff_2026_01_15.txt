@@ -1,0 +1,29 @@
+Meeting: Meridian Logistics - Project Kickoff & Technical Architecture
+Date: January 15, 2026
+Attendees:
+- Marcus Vance, VP of Technology (Meridian Logistics)
+- Elena Rostova, Product Director (Meridian Logistics)
+- Jordan Lee, Account Director (Agency)
+- Priya Patel, Technical Architect (Agency)
+
+TRANSCRIPT:
+
+Jordan Lee (Agency): Welcome everyone to our official project kickoff for the Meridian Logistics enterprise portal redesign. Marcus, Elena, thank you for joining. Today we want to nail down your technical constraints, branding requirements, and key milestones so our engineering and creative teams are fully aligned.
+
+Marcus Vance (Meridian): Thanks Jordan. First and foremost on the infrastructure side: our security and compliance mandate requires that all services run on AWS, specifically in the us-east-1 (N. Virginia) region. We cannot use Google Cloud or Azure for this workload.
+
+Priya Patel (Agency): Understood, AWS us-east-1 is noted. What about your persistent data store requirements?
+
+Marcus Vance (Meridian): For our primary database, it must be PostgreSQL deployed on AWS Aurora Serverless v2. We had a previous vendor propose MongoDB, but our enterprise compliance team strictly rejected MongoDB due to audit requirements. PostgreSQL is non-negotiable.
+
+Elena Rostova (Meridian): From a product and visual design perspective, our brand guidelines are very specific. Our primary palette is Deep Navy (hex code #0B192C) with Cobalt accent (#1E3E62). We strictly forbid any neon accent colors or harsh pure-black dark modes. The portal must feel understated, clean, and corporate.
+
+Jordan Lee (Agency): Understood. Deep Navy and Cobalt, no neon colors, no pure-black dark mode. What is our target release schedule?
+
+Elena Rostova (Meridian): We have committed to our executive board that the beta portal will launch on May 15, 2026. That gives us exactly four months from today.
+
+Jordan Lee (Agency): May 15, 2026 is on the calendar. And who has final sign-off on deliverables and budget adjustments?
+
+Marcus Vance (Meridian): I hold sole sign-off authority for all budget alterations exceeding $10,000. Elena is the primary point of contact for daily sprint deliverables, but any commercial change orders must come directly to me for formal signature.
+
+Jordan Lee (Agency): Excellent. We have AWS us-east-1, Aurora PostgreSQL, no MongoDB, brand palette of Navy and Cobalt, May 15 launch target, and Marcus as the sole budget authority. We will begin Sprint 1 immediately.
