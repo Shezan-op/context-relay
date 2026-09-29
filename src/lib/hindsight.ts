@@ -1,4 +1,5 @@
 import { HindsightClient, recallResponseToPromptString } from '@vectorize-io/hindsight-client';
+import { resolveKey } from './db';
 
 const HINDSIGHT_MISSION = `Extract durable business memory about this specific client. Prioritize explicit client preferences, likes/dislikes, decisions, approvals, rejections, constraints, goals, stakeholder roles, commitments, timelines, previous attempts, outcomes, and the reasons behind decisions when the reason is explicitly stated. Preserve temporal information and the source context. Prefer explicit statements over guesses. Ignore greetings, filler, small talk, transient scheduling chatter, generic conversation, repetitive phrasing, unrelated personal details, secrets, credentials, API keys, and information that has no likely future value for serving this client. Never invent facts.`;
 
@@ -15,12 +16,12 @@ export class HindsightWrapper {
   private baseUrl: string;
 
   constructor(config?: Partial<HindsightConfig>) {
-    this.baseUrl = config?.baseUrl || process.env.HINDSIGHT_API_URL || 'http://localhost:8888';
-    const apiKey = config?.apiKey || process.env.HINDSIGHT_API_KEY;
+    this.baseUrl = (config?.baseUrl || resolveKey('HINDSIGHT_API_URL', 'HINDSIGHT_API_URL') || process.env.HINDSIGHT_API_URL || 'http://localhost:8888').trim();
+    const apiKey = config?.apiKey || resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY') || process.env.HINDSIGHT_API_KEY;
 
     this.client = new HindsightClient({
       baseUrl: this.baseUrl,
-      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
+      headers: apiKey ? { Authorization: `Bearer ${apiKey.trim()}` } : undefined,
     });
   }
 

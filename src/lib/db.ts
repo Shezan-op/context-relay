@@ -9,6 +9,12 @@ export interface ClientRecord {
   created_at: string;
 }
 
+export interface ApiKeyRecord {
+  key_name: string;
+  key_value: string;
+  updated_at: string;
+}
+
 export interface SourceRecord {
   id: string;
   client_id: string;
@@ -67,6 +73,12 @@ export function getDatabase(): DatabaseSync {
         created_at TEXT NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS api_keys (
+        key_name TEXT PRIMARY KEY,
+        key_value TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_sources_client_id ON sources(client_id);
     `);
 
@@ -96,6 +108,12 @@ export function getClientRecord(id: string): ClientRecord | null {
   const stmt = db.prepare('SELECT id, name, hindsight_bank_id, created_at FROM clients WHERE id = ?');
   const result = stmt.get(id);
   return (result as unknown as ClientRecord) || null;
+}
+
+export function deleteClientRecord(id: string): void {
+  const db = getDatabase();
+  const stmt = db.prepare('DELETE FROM clients WHERE id = ?');
+  stmt.run(id);
 }
 
 // Source repository functions
@@ -169,3 +187,39 @@ export function getSourceByHindsightDocId(docId: string): SourceRecord | null {
   return (result as unknown as SourceRecord) || null;
 }
 
+// API Key repository functions
+export function setApiKey(keyName: string, keyValue: string): void {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const stmt = db.prepare(
+    'INSERT INTO api_keys (key_name, key_value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key_name) DO UPDATE SET key_value = excluded.key_value, updated_at = excluded.updated_at'
+  );
+  stmt.run(keyName, keyValue, now);
+}
+
+export function getApiKey(keyName: string): string | null {
+  const db = getDatabase();
+  const stmt = db.prepare('SELECT key_value FROM api_keys WHERE key_name = ?');
+  const result = stmt.get(keyName) as { key_value: string } | undefined;
+  return result?.key_value ?? null;
+}
+
+export function listApiKeys(): ApiKeyRecord[] {
+  const db = getDatabase();
+  const stmt = db.prepare('SELECT key_name, key_value, updated_at FROM api_keys ORDER BY key_name');
+  return stmt.all() as unknown as ApiKeyRecord[];
+}
+
+export function deleteApiKey(keyName: string): void {
+  const db = getDatabase();
+  const stmt = db.prepare('DELETE FROM api_keys WHERE key_name = ?');
+  stmt.run(keyName);
+}
+
+/**
+ * Resolves a key: DB takes priority over environment variables.
+ */
+export function resolveKey(keyName: string, envVar: string): string | null {
+  const val = getApiKey(keyName) || process.env[envVar] || null;
+  return val ? val.trim() : null;
+}

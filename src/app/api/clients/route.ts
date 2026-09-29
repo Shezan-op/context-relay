@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { createClientRecord, listClientRecords } from '@/lib/db';
+import { createClientRecord, listClientRecords, deleteClientRecord, resolveKey } from '@/lib/db';
 import { getHindsightClient } from '@/lib/hindsight';
 
 export async function GET() {
@@ -38,17 +38,54 @@ export async function POST(req: NextRequest) {
       created_at: now,
     };
 
-    // Provision bank in Hindsight with client memory mission
-    const hindsight = getHindsightClient();
-    await hindsight.ensureClientBank(hindsightBankId, name);
-
-    // Save record in SQLite
+    // Save record in SQLite first (always succeeds)
     createClientRecord(client);
 
-    return NextResponse.json({ client }, { status: 201 });
+    // Optionally provision bank in Hindsight — only if API key is configured
+    const hindsightKey = resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY');
+    let hindsightWarning: string | undefined;
+
+    if (hindsightKey) {
+      try {
+        const hindsight = getHindsightClient();
+        await hindsight.ensureClientBank(hindsightBankId, name);
+      } catch (hindsightErr: any) {
+        // Non-fatal: client is saved locally, Hindsight can be provisioned later
+        hindsightWarning = `Client saved locally. Hindsight bank provisioning failed: ${hindsightErr?.message || hindsightErr}`;
+      }
+    } else {
+      hindsightWarning = 'Hindsight API key not configured. Client saved locally — add your Hindsight key in Settings to enable memory features.';
+    }
+
+    return NextResponse.json(
+      { client, warning: hindsightWarning },
+      { status: 201 }
+    );
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || 'Failed to create client' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const clientId = searchParams.get('clientId');
+
+    if (!clientId) {
+      return NextResponse.json(
+        { error: 'clientId query parameter is required.' },
+        { status: 400 }
+      );
+    }
+
+    deleteClientRecord(clientId);
+    return NextResponse.json({ success: true, clientId });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'Failed to delete client' },
       { status: 500 }
     );
   }
