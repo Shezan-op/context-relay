@@ -25,10 +25,10 @@ This document records the foundational architectural decisions made in ContextRe
 - **Alternatives Evaluated:**
   1. *PostgreSQL / Supabase:* High-concurrency relational database requiring network infrastructure, connection pools, and migration management.
   2. *In-Memory JSON / File System:* Ephemeral storage with race condition vulnerabilities.
-  3. *Embedded SQLite (`better-sqlite3`):* Zero-configuration, ACID-compliant, single-file embedded database.
-- **Decision:** Use SQLite stored locally at `data/context_relay.db`.
-- **Rationale:** ContextRelay is designed for single-agency deployment or edge instances. SQLite eliminates external database dependencies, starts instantly, executes sub-millisecond queries, and provides rock-solid transaction guarantees.
-- **Consequences:** SQLite operates under single-writer locking, which is completely sufficient for agency account teams but requires persistent disk mounting when running in containerized environments.
+  3. *Embedded SQLite (`node:sqlite` DatabaseSync):* Zero-configuration, ACID-compliant, native single-file embedded database built into Node.js.
+- **Decision:** Use Node.js built-in `node:sqlite` (`DatabaseSync`) stored locally at `context_relay.sqlite`.
+- **Rationale:** ContextRelay is designed for single-agency deployment or edge instances. Native SQLite eliminates external database dependencies and C++ build toolchains, starts instantly, executes sub-millisecond queries, and provides rock-solid transaction guarantees.
+- **Consequences:** SQLite operates under single-writer locking with WAL enabled, which is completely sufficient for agency account teams but requires persistent disk mounting when running in containerized environments.
 
 ---
 
@@ -81,7 +81,7 @@ This document records the foundational architectural decisions made in ContextRe
   2. *Synchronous (`async: false`):* HTTP request waits until Hindsight extracts entities and updates the memory bank.
 - **Decision:** Enforce synchronous retention (`async: false`).
 - **Rationale:** Ensures deterministic state transitions. When the UI or test runner receives an HTTP 201 response, the memory is immediately queryable. This eliminates race conditions during rapid handovers or sequential test execution.
-- **Consequences:** Ingestion requests take 2 to 6 seconds depending on transcript length. Enforced file size limit of 2MB prevents timeouts.
+- **Consequences:** Ingestion requests take 2 to 6 seconds depending on transcript length. Enforced file size limit of 5MB prevents timeouts.
 
 ---
 

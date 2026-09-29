@@ -11,7 +11,7 @@ REAL CLIENT TRANSCRIPT FILE (.txt / .md)
         ↓
 Next.js upload endpoint (/api/sources)
         ↓
-Transcript validation (format, size, UTF-8, non-empty)
+Transcript validation (format, size, UTF-8, non-empty, max 5MB)
         ↓
 SQLite SOURCE metadata (status: 'processing')
         ↓
@@ -21,17 +21,26 @@ Hindsight extracts durable client memory (via Client Memory Mission)
         ↓
 Client-specific Hindsight bank (isolated `client:<uuid>`)
         ↓
-User asks a client question (POST /api/query)
++-------------------------------------------------------------------------------+
+|                       CLIENT CONTINUITY REQUEST CHANNELS                      |
+|                                                                               |
+| 1. Don't Repeat This (/api/dont-repeat)                                       |
+|    → Targeted Hindsight recall on rejections, failed approaches, dislikes     |
+|    → Reason extraction without fabrication + date preservation + status       |
+|                                                                               |
+| 2. Decision Timeline (/api/timeline)                                          |
+|    → Targeted Hindsight recall on decisions, approvals, mandates             |
+|    → Chronological sorting + supersession tracking + evidence attachments     |
+|                                                                               |
+| 3. Handoff Brief (/api/handoff)                                               |
+|    → Multi-faceted Hindsight recall across 6 operational dimensions           |
+|    → Grounded synthesis into executive dossier + cross-links                  |
+|                                                                               |
+| 4. Ad-Hoc Grounded Query (/api/query)                                         |
+|    → Natural language recall + strict grounding prompt + verbatim drawer      |
++-------------------------------------------------------------------------------+
         ↓
-Hindsight Recall (POST /v1/default/banks/{bank_id}/memories/recall)
-        ↓
-Relevant memory facts + source chunks
-        ↓
-Application LLM (grounding prompt + question + evidence)
-        ↓
-Grounded answer + evidence
-        ↓
-UI (renders Answer + Evidence drawer)
+UI Workspace (Dark monochrome, verifiable evidence drawers, cross-links)
 ```
 
 ---
@@ -129,6 +138,34 @@ The server formats the grounding prompt with the user question and the retrieved
 The server returns `{ answer, evidence }` to the browser:
 - The UI prominently displays the direct answer.
 - Beneath the answer, the UI displays an **Evidence Drawer** showing each supporting memory fact, its timestamp, original file name, and expandable transcript chunk excerpt.
+
+### Step 12: Don't Repeat This Flow
+1. User clicks or views "Don't Repeat This" tab (`GET /api/dont-repeat?clientId=<id>`).
+2. Server queries Hindsight using targeted negative recall queries (`rejected ideas, client dislikes, failed approaches`).
+3. For each recalled fact, server extracts:
+   - What was rejected/disliked.
+   - Why it was rejected (extracted strictly from explicit `because/due to` evidence; if not present, marks `"Reason not recorded in available client memory."`).
+   - When it occurred (from Hindsight `occurred_start` or `mentioned_at`).
+   - Source document filename and verbatim quote.
+   - Active vs superseded status (if later evidence shows client adopted it).
+4. Returns `{ clientId, items, hasEvidence }`. The UI renders cards with explicit reasons, dates, and evidence quotes.
+
+### Step 13: Decision Timeline Flow
+1. User clicks or views "Decision Timeline" tab (`GET /api/timeline?clientId=<id>`).
+2. Server queries Hindsight using decision-focused recall queries (`explicit decisions, approvals, mandates`).
+3. Server filters candidates using decision indicators (`approved`, `decided`, `mandated`, `selected`).
+4. Sorts decisions chronologically (oldest first, undated at end).
+5. Detects superseded decisions by evaluating subsequent contradicting choices in the same domain.
+6. Returns `{ clientId, timeline, hasEvidence }`. The UI renders a clean vertical timeline showing progression from historical choices to current state.
+
+### Step 14: Handoff Brief Flow
+1. User clicks "Prepare Handoff Brief" (`POST /api/handoff`).
+2. Server executes parallel targeted recalls across 6 core continuity dimensions (decisions, preferences, stakeholders, rejections, constraints, history).
+3. Evaluates retrieved evidence:
+   - If zero facts are returned across all dimensions, short-circuits with an honest empty state without calling LLM.
+   - If facts are present, feeds the evidence into the LLM with strict grounding instructions to synthesize the 9 structured sections.
+4. Concurrently embeds the structured `dontRepeat` and `decisions` lists to provide one-click jump links ("Review Don't Repeat This →", "Explore Decision Timeline →").
+5. Returns `{ clientId, brief, dontRepeat, decisions, evidence, generatedAt }`.
 
 ---
 

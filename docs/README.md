@@ -46,6 +46,6 @@ Use the navigation matrix below to locate relevant documentation based on your r
 ### "I want to evaluate security, testing, and limitations"
 - [**Client Isolation**](file:///c:/Users/techt/context-relay/docs/client-isolation.md): How tenant boundaries are enforced between client accounts.
 - [**Security Boundaries**](file:///c:/Users/techt/context-relay/docs/security.md): Server-side secret isolation, sanitization, and security postures.
-- [**Automated Test Suite**](file:///c:/Users/techt/context-relay/docs/testing.md): What the 12 automated pipeline test categories prove.
+- [**Automated Test Suite**](file:///c:/Users/techt/context-relay/docs/testing.md): What the 15 automated pipeline test categories prove.
 - [**System Limitations & Non-Goals**](file:///c:/Users/techt/context-relay/docs/limitations.md): Candid documentation of what the product does not do.
 - [**Visual Screenshot Specifications**](file:///c:/Users/techt/context-relay/docs/screenshots.md): Visual verification plan for production interfaces.

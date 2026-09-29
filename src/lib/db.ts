@@ -154,3 +154,18 @@ export function getSourceRecord(id: string): SourceRecord | null {
   const result = stmt.get(id);
   return (result as unknown as SourceRecord) || null;
 }
+
+export function getSourceByHindsightDocId(docId: string): SourceRecord | null {
+  const db = getDatabase();
+  const stmt = db.prepare(`
+    SELECT id, client_id, original_filename, content_type, size_bytes,
+           meeting_date, hindsight_document_id, ingestion_status, error_message, created_at
+    FROM sources
+    WHERE hindsight_document_id = ? OR id = ?
+    LIMIT 1
+  `);
+  const cleanId = docId.startsWith('doc:') ? docId.substring(4) : docId;
+  const result = stmt.get(docId, cleanId);
+  return (result as unknown as SourceRecord) || null;
+}
+

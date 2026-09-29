@@ -27,14 +27,14 @@ When encountering errors, verify the following prerequisites:
 - **Cause:** The provided API key is invalid, revoked, or belongs to an expired workspace.
 - **Fix:** Generate a fresh API key from your Hindsight console and update the environment variable.
 
-### Issue: "Invalid file type. Only .txt, .md, and .json files are supported"
+### Issue: "Invalid file type. Only .txt and .md files are supported"
 - **Symptom:** Uploading a transcript returns HTTP 400.
-- **Cause:** Attempting to upload a PDF, DOCX, CSV, or audio file.
-- **Fix:** ContextRelay accepts plain text transcripts (`.txt`), Markdown (`.md`), and JSON exports (`.json`). Convert documents to text or Markdown before upload.
+- **Cause:** Attempting to upload a PDF, DOCX, CSV, JSON, or audio file via the file upload form.
+- **Fix:** ContextRelay accepts plain text transcripts (`.txt`) and Markdown (`.md`). Programmatic transcripts can also be ingested directly via JSON payloads to `/api/sources`. Convert documents to text or Markdown before uploading files.
 
-### Issue: "File exceeds 2MB limit"
+### Issue: "File size exceeds 5MB limit"
 - **Symptom:** Upload is rejected immediately with HTTP 400.
-- **Cause:** The transcript file is larger than 2,097,152 bytes.
+- **Cause:** The transcript file is larger than 5,242,880 bytes (5MB).
 - **Fix:** Split massive multi-hour transcripts into individual meeting sessions (e.g., `meeting-2026-01-15.txt`, `meeting-2026-01-22.txt`). This improves extraction granularity in Hindsight.
 
 ---

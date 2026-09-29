@@ -11,34 +11,34 @@ This document describes the technical architecture of ContextRelay, detailing da
 ## 1. System Architecture Diagram
 
 ```
-+-----------------------------------------------------------------------------------+
-|                                 USER BROWSER                                      |
-|                                                                                   |
-|  +--------------------+   +-----------------------+   +------------------------+  |
-|  |    Client List     |   | Transcript Ingestion  |   |  Answer & Evidence UI  |  |
-|  | (Empty / Real-only)|   |     (.txt / .md)      |   | (Facts, Chunks, Dates) |  |
-|  +---------+----------+   +-----------+-----------+   +-----------▲------------+  |
-+------------|--------------------------|---------------------------|---------------+
-             |                          |                           |
-             | POST /api/clients        | POST /api/sources         | POST /api/query
-             ▼                          ▼                           |
-+-------------------------------------------------------------------|---------------+
-|                            NEXT.JS SERVER APPLICATION             |               |
-|                                                                   |               |
-|  +--------------------+   +-----------------------+   +-----------+------------+  |
-|  |   Client Service   |   |   Ingestion Service   |   |   Retrieval Service    |  |
-|  |  (UUID Bank Gen)   |   | (Validation, Status)  |   |  (Bank Match, Guard)   |  |
-|  +---------+----------+   +-----------+-----------+   +-----------+------------+  |
-|            |                          |                           |               |
-|            +-------------------+      |       +-------------------+               |
-|                                |      |       |                                   |
-|                                ▼      ▼       ▼                                   |
-|                    +------------------------------------+                         |
-|                    |           SQLite Layer             |                         |
-|                    |   (Clients & Sources Metadata)     |                         |
-|                    +------------------------------------+                         |
-|                                       |                                           |
-+---------------------------------------|-------------------------------------------+
++---------------------------------------------------------------------------------------------------+
+|                                         USER BROWSER                                              |
+|                                                                                                   |
+|  +--------------------+   +-----------------------+   +----------------------------------------+  |
+|  |    Client List     |   | Transcript Ingestion  |   |        Client Continuity Suite         |  |
+|  | (Empty / Real-only)|   |     (.txt / .md)      |   | [Don't Repeat] [Timeline] [Handoff]    |  |
+|  +---------+----------+   +-----------+-----------+   +-------------------▲--------------------+  |
++------------|--------------------------|-----------------------------------|-----------------------+
+             |                          |                                   |
+             | POST /api/clients        | POST /api/sources                 | GET/POST /api/dont-repeat
+             ▼                          ▼                                   | GET/POST /api/timeline
++-------------------------------------------------------------------| GET/POST /api/handoff
+|                            NEXT.JS SERVER APPLICATION             | POST /api/query
+|                                                                   |       |
+|  +--------------------+   +-----------------------+   +-----------+-------▼----+
+|  |   Client Service   |   |   Ingestion Service   |   |   Retrieval & Continuity   |
+|  |  (UUID Bank Gen)   |   | (Validation, Status)  |   |   Orchestration Service    |
+|  +---------+----------+   +-----------+-----------+   +-----------+------------+
+|            |                          |                           |
+|            +-------------------+      |       +-------------------+
+|                                |      |       |
+|                                ▼      ▼       ▼
+|                    +------------------------------------+
+|                    |     SQLite Layer (node:sqlite)     |
+|                    |    (Clients & Sources Metadata)    |
+|                    +------------------------------------+
+|                                       |
++---------------------------------------|-----------------------------------------------------------+
                                         |
                  +----------------------+----------------------+
                  |                                             |
@@ -50,11 +50,11 @@ This document describes the technical architecture of ContextRelay, detailing da
 |  | Bank: `client:<uuid>`        |  |        |  +------------------------------+  |
 |  | - Client Retain Mission      |  |        |  | Grounding System Prompt      |  |
 |  | - Fact & Entity Extraction   |  |        |  | - Strict context evidence    |  |
-|  | - Knowledge Graph & Temporal |  |        |  | - Conflict identification    |  |
-|  | - Multi-Strategy Recall      |  |        |  | - Abstention on missing facts|  |
-|  | - Chunks & Provenance        |  |        |  +------------------------------+  |
-|  +------------------------------+  |        +------------------------------------+
-+------------------------------------+
+|  | - Knowledge Graph & Temporal |  |        |  | - Grounded Handover Brief    |  |
+|  | - Multi-Strategy Recall      |  |        |  | - Conflict identification    |  |
+|  | - Chunks & Provenance        |  |        |  | - Abstention on missing facts|  |
+|  +------------------------------+  |        |  +------------------------------+  |
++------------------------------------+        +------------------------------------+
 ```
 
 ---
@@ -62,14 +62,18 @@ This document describes the technical architecture of ContextRelay, detailing da
 ## 2. Component List
 
 1. **Next.js Web Application (React UI + Next.js App Router API Routes)**
-   - Frontend: Clean, minimalist three-area interface (Client List/Empty State, Client Workspace, Answer + Evidence Card).
-   - Backend API: Server-side route handlers (`/api/clients`, `/api/sources`, `/api/query`) orchestrating database access, Hindsight communication, and LLM calls.
-2. **SQLite Database Layer (`better-sqlite3` or Node.js native sqlite)**
+   - Frontend: Clean, dark monochrome interface with 4 functional continuity surfaces:
+     - **Don't Repeat This**: Visual inventory of client-specific rejected ideas, failed approaches, dislikes, verified reasons, and active/superseded status.
+     - **Decision Timeline**: Chronological trace of explicit business/technical decisions and approvals, highlighting historical changes and current known state.
+     - **Handoff Brief**: Executive handover dossier connecting with Don't Repeat This and Decision Timeline via cross-links.
+     - **Ask Memory**: Grounded query panel for ad-hoc exploration with verifiable evidence drawers.
+   - Backend API: Server-side route handlers (`/api/clients`, `/api/sources`, `/api/dont-repeat`, `/api/timeline`, `/api/handoff`, `/api/query`) orchestrating database access, Hindsight communication, and LLM calls.
+2. **SQLite Database Layer (Node.js native `node:sqlite` via `DatabaseSync`)**
    - Local database storing metadata records in `clients` and `sources` tables.
 3. **Hindsight Memory Server (`@vectorize-io/hindsight-client` / REST API)**
    - Dedicated biomimetic memory system managing client-isolated memory banks, document retention, extraction, and multi-strategy recall.
 4. **Application LLM Provider (Configurable: Groq, OpenAI, Anthropic, Gemini)**
-   - Generates grounded, natural-language answers strictly conditioned on evidence retrieved from Hindsight.
+   - Generates grounded, natural-language answers and synthesizes the Handoff Brief strictly conditioned on evidence retrieved from Hindsight.
 
 ---
 

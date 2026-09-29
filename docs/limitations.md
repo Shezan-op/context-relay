@@ -15,7 +15,7 @@ This document provides a candid assessment of what the system does **not** do, i
 | **Direct Email / Slack Ingestion** | No IMAP/Gmail listeners or Slack app bot integrations. | Raw communication channels require rigorous filtering before ingestion. Documents must be explicitly submitted via the ingestion pipeline. |
 | **Authentication & RBAC** | No user login, OAuth2, SAML/SSO, or role-based access control. | Currently structured as an internal agency single-tenant tool or trusted network service. Authentication must be managed at the edge/reverse-proxy layer. |
 | **Multi-Agency Tenancy** | No multi-agency isolation. | The system isolates *clients within an agency* via separate Hindsight memory banks, but does not provide multi-tenant isolation between competing agencies on a shared database. |
-| **Asynchronous Job Queues** | No Redis, BullMQ, RabbitMQ, or Celery background workers. | Document ingestion (`POST /api/sources`) is strictly synchronous (`async: false` in Hindsight Retain). Very large files (>2MB) or bulk uploads of dozens of transcripts will block the HTTP request until processing finishes. |
+| **Asynchronous Job Queues** | No Redis, BullMQ, RabbitMQ, or Celery background workers. | Document ingestion (`POST /api/sources`) is strictly synchronous (`async: false` in Hindsight Retain). Very large files (>5MB) or bulk uploads of dozens of transcripts will block the HTTP request until processing finishes. |
 | **Automated HRIS Handoff Triggers** | No integration with BambooHR, Rippling, or Workday to detect when an employee leaves. | Account handover briefs are generated on-demand by the incoming account manager or team lead via the `POST /api/handoff` endpoint or UI. |
 | **Autonomous Client Agent** | The system does NOT speak directly to clients or send autonomous emails. | ContextRelay is strictly an internal decision-support tool for account managers. It never interfaces externally with the agency's clients. |
 | **Billing & Metering** | No Stripe integration, seat licenses, or usage quotas. | Open-source reference architecture with no billing middleware. |
@@ -26,14 +26,14 @@ This document provides a candid assessment of what the system does **not** do, i
 ## 2. Technical & Scale Boundaries
 
 ### 2.1 File Ingestion Boundaries
-- **Maximum File Size:** Enforced at **2MB** per transcript upload to prevent HTTP request timeouts during synchronous Hindsight retain calls.
-- **Accepted Formats:** Plain text (`.txt`), Markdown (`.md`), and JSON transcript exports (`.json`). Binary formats (PDF, DOCX, audio MP3/WAV) are rejected with HTTP 400.
+- **Maximum File Size:** Enforced at **5MB** (5,242,880 bytes) per transcript upload.
+- **Accepted Formats:** Plain text (`.txt`) and Markdown (`.md`). Binary formats (PDF, DOCX, audio MP3/WAV) are rejected with HTTP 400.
 - **Batch Processing:** Files must be uploaded individually or sequentially; there is no bulk ZIP ingestion endpoint.
 
 ### 2.2 Database Boundaries
-- **Storage Engine:** SQLite via `better-sqlite3`.
-- **Concurrency:** SQLite operates under single-writer locking. While fine for typical agency account management teams (dozens of concurrent queries), it is not architected for high-throughput write-heavy workloads.
-- **Persistence:** In serverless or containerized environments, the SQLite database (`data/context_relay.db`) will be destroyed on container restart unless a persistent block storage volume (e.g., AWS EBS, GCP Persistent Disk, Docker volume) is explicitly mounted.
+- **Storage Engine:** SQLite via Node.js native `node:sqlite` (`DatabaseSync`).
+- **Concurrency:** SQLite operates under single-writer locking with Write-Ahead Logging (WAL) enabled. While fine for agency account management teams, it is not architected for high-throughput write-heavy workloads.
+- **Persistence:** In serverless or containerized environments, the SQLite database (`context_relay.sqlite`) will be destroyed on container restart unless persistent storage (or mounted volume) is configured.
 
 ### 2.3 Memory Model Boundaries
 - **Lossy vs. Lossless:** Hindsight does not retain the exact verbatim text of an entire 10,000-word conversation; it extracts and structures durable entities, facts, decisions, and temporal relationships. Verbatim source quotes are preserved in evidence, but memory is semantic, not a raw mirror.

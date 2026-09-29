@@ -17,7 +17,12 @@ import {
   listSourcesForClient,
 } from '../src/lib/db';
 import { ingestTranscript } from '../src/lib/ingestion';
-import { answerClientQuestion, generateClientHandoffBrief } from '../src/lib/retrieval';
+import {
+  answerClientQuestion,
+  generateClientHandoffBrief,
+  getDontRepeatItems,
+  getDecisionTimeline,
+} from '../src/lib/retrieval';
 import { HindsightWrapper, getHindsightClient } from '../src/lib/hindsight';
 import * as llmModule from '../src/lib/llm';
 
@@ -496,3 +501,261 @@ test('Category 11: Dedicated account handover brief surfaces structured continui
     HindsightWrapper.prototype.recallMemories = originalRecall;
   }
 });
+
+// Test Category 12: Don't Repeat This retrieves rejections with dates, reasons, and evidence
+test('Category 12: Don\'t Repeat This retrieves rejections with explicit reasons and evidence', async () => {
+  const clientId = randomUUID();
+  const bankId = `client:${clientId}`;
+  createClientRecord({
+    id: clientId,
+    name: 'Don\'t Repeat Test Client',
+    hindsight_bank_id: bankId,
+    created_at: new Date().toISOString(),
+  });
+
+  const mockEvidence = [
+    {
+      id: 'rej-1',
+      text: 'Client strictly rejected third-party analytics cookies due to HIPAA compliance concerns.',
+      type: 'world',
+      occurredStart: '2026-01-15T10:00:00Z',
+      sourceChunk: 'We strictly reject third-party analytics cookies because of HIPAA compliance.',
+      documentId: 'doc:trans-1',
+    },
+    {
+      id: 'rej-2',
+      text: 'Client rejected MongoDB for all backend services.',
+      type: 'experience',
+      occurredStart: null, // missing date
+      sourceChunk: 'Do not use MongoDB.',
+      documentId: 'doc:trans-2',
+    },
+    {
+      id: 'irr-1',
+      text: 'Meeting took place in the central conference room.',
+      type: 'observation',
+      occurredStart: '2026-01-15T10:00:00Z',
+      documentId: 'doc:trans-1',
+    },
+  ];
+
+  let retainCount = 0;
+  const originalRetain = HindsightWrapper.prototype.retainTranscript;
+  const originalRecall = HindsightWrapper.prototype.recallMemories;
+
+  HindsightWrapper.prototype.retainTranscript = async () => {
+    retainCount++;
+    return { ok: true };
+  };
+
+  HindsightWrapper.prototype.recallMemories = async () => {
+    return { results: mockEvidence, formattedContext: '' };
+  };
+
+  try {
+    const res = await getDontRepeatItems(clientId);
+
+    assert.equal(res.hasEvidence, true);
+    assert.equal(res.clientName, 'Don\'t Repeat Test Client');
+    assert.equal(res.items.length, 2, 'Should only include explicit rejections, excluding room observation');
+
+    // Item 1: Explicit reason extracted, date preserved
+    const item1 = res.items.find((i) => i.item.includes('third-party analytics'));
+    assert.ok(item1);
+    assert.equal(item1.date, '2026-01-15T10:00:00Z');
+    assert.match(item1.reason, /HIPAA compliance concerns/i);
+    assert.equal(item1.status, 'active_rejection');
+    assert.ok(item1.evidenceQuote);
+
+    // Item 2: Missing date remains null (no fabricated date), missing reason says not recorded
+    const item2 = res.items.find((i) => i.item.includes('MongoDB'));
+    assert.ok(item2);
+    assert.equal(item2.date, null, 'Missing date must remain null');
+    assert.match(item2.reason, /Reason not recorded in available client memory/i);
+
+    // Query must never call retain
+    assert.equal(retainCount, 0, 'Retrieving Don\'t Repeat This must not write to Hindsight');
+
+    // Test empty recall
+    HindsightWrapper.prototype.recallMemories = async () => ({ results: [], formattedContext: '' });
+    const emptyRes = await getDontRepeatItems(clientId);
+    assert.equal(emptyRes.hasEvidence, false);
+    assert.equal(emptyRes.items.length, 0);
+    assert.match(emptyRes.message || '', /No recorded rejected approaches were found/);
+  } finally {
+    HindsightWrapper.prototype.retainTranscript = originalRetain;
+    HindsightWrapper.prototype.recallMemories = originalRecall;
+  }
+});
+
+// Test Category 13: Decision Timeline chronologically orders decisions and tracks superseded status
+test('Category 13: Decision Timeline chronologically orders decisions and tracks superseded status', async () => {
+  const clientId = randomUUID();
+  const bankId = `client:${clientId}`;
+  createClientRecord({
+    id: clientId,
+    name: 'Timeline Test Client',
+    hindsight_bank_id: bankId,
+    created_at: new Date().toISOString(),
+  });
+
+  const mockEvidence = [
+    {
+      id: 'dec-later',
+      text: 'Client adopted TimescaleDB for time-series telemetry ingest while keeping PostgreSQL for core user records.',
+      type: 'world',
+      occurredStart: '2026-03-20T14:00:00Z',
+      sourceChunk: 'We decided to adopt TimescaleDB for time-series telemetry.',
+      documentId: 'doc:rev-1',
+    },
+    {
+      id: 'dec-earlier',
+      text: 'Client approved standard PostgreSQL on AWS RDS for all services.',
+      type: 'world',
+      occurredStart: '2026-01-10T10:00:00Z',
+      sourceChunk: 'PostgreSQL on AWS RDS is approved.',
+      documentId: 'doc:kick-1',
+    },
+    {
+      id: 'dec-undated',
+      text: 'Client mandated weekly sprint retrospectives on Thursdays.',
+      type: 'world',
+      occurredStart: null, // undated decision
+      sourceChunk: 'Weekly sprint retrospectives are mandated.',
+      documentId: 'doc:kick-1',
+    },
+    {
+      id: 'not-a-decision',
+      text: 'Conference call was attended by six stakeholders.',
+      type: 'observation',
+      occurredStart: '2026-01-10T10:00:00Z',
+      documentId: 'doc:kick-1',
+    },
+  ];
+
+  let retainCount = 0;
+  const originalRetain = HindsightWrapper.prototype.retainTranscript;
+  const originalRecall = HindsightWrapper.prototype.recallMemories;
+
+  HindsightWrapper.prototype.retainTranscript = async () => {
+    retainCount++;
+    return { ok: true };
+  };
+
+  HindsightWrapper.prototype.recallMemories = async () => {
+    return { results: mockEvidence, formattedContext: '' };
+  };
+
+  try {
+    const res = await getDecisionTimeline(clientId);
+
+    assert.equal(res.hasEvidence, true);
+    assert.equal(res.clientName, 'Timeline Test Client');
+    assert.equal(res.decisions.length, 3, 'Should only include decisions, excluding attendance observation');
+
+    // Chronological order: 2026-01-10 decision should be first
+    assert.equal(res.decisions[0].date, '2026-01-10T10:00:00Z');
+    assert.match(res.decisions[0].statement, /PostgreSQL/);
+
+    // Later decision should be second
+    assert.equal(res.decisions[1].date, '2026-03-20T14:00:00Z');
+    assert.match(res.decisions[1].statement, /TimescaleDB/);
+
+    // Undated decision should be placed at the end
+    assert.equal(res.decisions[2].date, null);
+
+    // Superseded detection: Earlier PostgreSQL decision superseded by TimescaleDB
+    assert.equal(res.decisions[0].status, 'superseded');
+    assert.match(res.decisions[0].supersededBy || '', /TimescaleDB/);
+    assert.equal(res.decisions[1].status, 'current');
+    assert.match(res.decisions[1].supersedes || '', /PostgreSQL/);
+
+    // Query must never call retain
+    assert.equal(retainCount, 0, 'Retrieving Decision Timeline must not write to Hindsight');
+
+    // Test empty recall
+    HindsightWrapper.prototype.recallMemories = async () => ({ results: [], formattedContext: '' });
+    const emptyRes = await getDecisionTimeline(clientId);
+    assert.equal(emptyRes.hasEvidence, false);
+    assert.equal(emptyRes.decisions.length, 0);
+    assert.match(emptyRes.message || '', /No recorded decisions found/);
+  } finally {
+    HindsightWrapper.prototype.retainTranscript = originalRetain;
+    HindsightWrapper.prototype.recallMemories = originalRecall;
+  }
+});
+
+// Test Category 14: Client Isolation across Don't Repeat This, Decision Timeline, and Handoff Brief
+test('Category 14: Client Isolation across Don\'t Repeat This, Decision Timeline, and Handoff Brief', async () => {
+  const clientAId = randomUUID();
+  const bankAId = `client:${clientAId}`;
+  createClientRecord({
+    id: clientAId,
+    name: 'Client Alpha',
+    hindsight_bank_id: bankAId,
+    created_at: new Date().toISOString(),
+  });
+
+  const clientBId = randomUUID();
+  const bankBId = `client:${clientBId}`;
+  createClientRecord({
+    id: clientBId,
+    name: 'Client Beta',
+    hindsight_bank_id: bankBId,
+    created_at: new Date().toISOString(),
+  });
+
+  let queriedBank = '';
+  const originalRecall = HindsightWrapper.prototype.recallMemories;
+  HindsightWrapper.prototype.recallMemories = async (bId) => {
+    queriedBank = bId;
+    if (bId === bankAId) {
+      return {
+        results: [
+          {
+            id: 'alpha-rej',
+            text: 'Client strictly rejected Redis cache due to memory costs.',
+            type: 'world',
+            occurredStart: '2026-02-01T10:00:00Z',
+          },
+          {
+            id: 'alpha-dec',
+            text: 'Client approved DynamoDB for session state.',
+            type: 'world',
+            occurredStart: '2026-02-01T10:00:00Z',
+          },
+        ],
+        formattedContext: '',
+      };
+    }
+    // Client B bank has no data
+    return { results: [], formattedContext: '' };
+  };
+
+  try {
+    // Querying Client B must query Bank B, never Bank A
+    const drB = await getDontRepeatItems(clientBId);
+    assert.equal(queriedBank, bankBId);
+    assert.equal(drB.hasEvidence, false);
+    assert.equal(drB.items.length, 0);
+
+    const tlB = await getDecisionTimeline(clientBId);
+    assert.equal(queriedBank, bankBId);
+    assert.equal(tlB.hasEvidence, false);
+    assert.equal(tlB.decisions.length, 0);
+
+    const hbB = await generateClientHandoffBrief(clientBId);
+    assert.equal(queriedBank, bankBId);
+    assert.equal(hbB.hasEvidence, false);
+
+    // Querying Client A queries Bank A
+    const drA = await getDontRepeatItems(clientAId);
+    assert.equal(queriedBank, bankAId);
+    assert.equal(drA.hasEvidence, true);
+    assert.equal(drA.items.length, 1);
+    assert.match(drA.items[0].item, /Redis/);
+  } finally {
+    HindsightWrapper.prototype.recallMemories = originalRecall;
+  }
+});
+

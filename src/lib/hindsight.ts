@@ -7,24 +7,8 @@ export interface HindsightConfig {
   apiKey?: string;
 }
 
-export interface RecalledEvidenceItem {
-  id: string;
-  text: string;
-  type: string;
-  context?: string | null;
-  occurredStart?: string | null;
-  occurredEnd?: string | null;
-  mentionedAt?: string | null;
-  documentId?: string | null;
-  chunkId?: string | null;
-  sourceChunk?: string | null;
-  entities?: string[] | null;
-}
-
-export interface RecallResultPayload {
-  results: RecalledEvidenceItem[];
-  formattedContext: string;
-}
+import { RecalledEvidenceItem, RecallResultPayload } from './types';
+export type { RecalledEvidenceItem, RecallResultPayload };
 
 export class HindsightWrapper {
   private client: HindsightClient;

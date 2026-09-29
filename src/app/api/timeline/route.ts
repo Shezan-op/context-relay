@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateClientHandoffBrief } from '@/lib/retrieval';
+import { getDecisionTimeline } from '@/lib/retrieval';
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,16 +8,16 @@ export async function GET(req: NextRequest) {
 
     if (!clientId) {
       return NextResponse.json(
-        { error: 'clientId query parameter is required to generate an account handoff brief.' },
+        { error: 'clientId query parameter is required.' },
         { status: 400 }
       );
     }
 
-    const result = await generateClientHandoffBrief(clientId);
+    const result = await getDecisionTimeline(clientId);
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || 'Failed to generate account handoff brief' },
+      { error: err?.message || 'Failed to retrieve decision timeline' },
       { status: 500 }
     );
   }
@@ -30,16 +30,16 @@ export async function POST(req: NextRequest) {
 
     if (!clientId) {
       return NextResponse.json(
-        { error: 'clientId is required to generate an account handoff brief.' },
+        { error: 'clientId is required in request body.' },
         { status: 400 }
       );
     }
 
-    const result = await generateClientHandoffBrief(clientId);
+    const result = await getDecisionTimeline(clientId);
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || 'Failed to generate account handoff brief' },
+      { error: err?.message || 'Failed to retrieve decision timeline' },
       { status: 500 }
     );
   }

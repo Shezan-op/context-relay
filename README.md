@@ -47,21 +47,25 @@ Hindsight is not a generic vector index or simple retrieval vendor. It is the co
 
 ---
 
-## 4. The 13 Continuity Capabilities
+## 4. The Three Core Client Continuity Features
 
-1. **Client-Specific Memory Isolation:** Memory is strictly sequestered in dedicated `client:<uuid>` banks.
-2. **Automatic Knowledge Retention:** Ingests conversations directly; no manual memory tagging required.
-3. **Client Preferences:** Retains explicit brand constraints, design guidelines, and aesthetic rules.
-4. **Decisions & Approvals:** Tracks confirmed mandates, deliverables, and architecture sign-offs.
-5. **Explicit Rejections:** Preserves what the client rejected (e.g. MongoDB) to prevent repeat proposals.
-6. **Previous Attempts:** Remembers strategies that failed and reasons why.
-7. **Stakeholder Roles:** Tracks who has budget authority versus day-to-day sprint POCs.
-8. **Temporal Context:** Anchors facts to meeting dates and chronological milestones.
-9. **Changes in Decisions Over Time:** Explains requirement shifts (e.g., launch date moving from May 15 to June 30).
-10. **Source Provenance:** Retains pointers back to originating document IDs and verbatim quotes.
-11. **Evidence-Backed Answers:** Application LLM answers are strictly conditioned on retrieved memory facts.
-12. **Missing Information Handling:** Halts cleanly and abstains without calling the LLM if evidence is absent.
-13. **Conflicting Information Resolution:** Surfaces both older and newer statements with dates to explain transitions.
+ContextRelay organizes institutional knowledge into three unified continuity workflows:
+
+1. **Don't Repeat This (`/api/dont-repeat`)**:
+   - Surfaces what the agency previously tried with this client that the new account manager should not repeat.
+   - Categorizes rejected ideas, failed approaches, client dislikes, and explicitly negative preferences.
+   - Discloses verified reasons and exact dates only when explicitly recorded; never fabricates assumptions.
+   - Detects when later client evidence supersedes historical rejections.
+
+2. **Decision Timeline (`/api/timeline`)**:
+   - Visualizes how technical and business decisions evolved over time.
+   - Orders explicit mandates chronologically (e.g., PostgreSQL approved in kickoff → TimescaleDB adopted for telematics in Q2 review).
+   - Identifies active vs superseded decisions with verifiable evidence quotes and dates.
+
+3. **Handoff Brief (`/api/handoff`)**:
+   - Answers: *"I just inherited this client. What do I need to know before my first meeting?"*
+   - Prepares an executive briefing covering current decisions, preferences, stakeholders, rejections, constraints, and known unknowns.
+   - Integrates cross-links directly to "Don't Repeat This" and "Decision Timeline".
 
 ---
 

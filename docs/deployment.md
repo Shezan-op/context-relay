@@ -9,7 +9,7 @@ This guide details the technical requirements, configuration variables, runtime 
 - **Node.js:** v18.17.0 or v20.x LTS (Recommended: Node 20 LTS).
 - **Package Manager:** `npm` v9+ (or `pnpm` / `yarn`).
 - **Operating System:** Linux (Ubuntu 22.04+, Debian 12, Alpine 3.19+), macOS 13+, or Windows 11.
-- **Native Add-on Toolchain:** Python 3 and a C++ compiler (`build-essential` or Xcode tools) are required during `npm install` for compiling `better-sqlite3`.
+- **Embedded Database:** Uses Node.js built-in `node:sqlite` (`DatabaseSync`), requiring zero external native compilation dependencies or C++ build tools.
 
 ---
 
@@ -54,16 +54,13 @@ npm start
 
 ### Topology A: Docker Container / Persistent VPS (Recommended)
 
-Because ContextRelay utilizes `better-sqlite3` for fast, zero-dependency metadata storage, running on a persistent container or VPS with mounted disk storage is the recommended topology.
+Because ContextRelay utilizes Node.js built-in `node:sqlite` for fast, zero-dependency metadata storage, running on a persistent container or VPS with mounted disk storage is the recommended topology.
 
 #### Dockerfile Example
 
 ```dockerfile
 FROM node:20-slim AS base
 WORKDIR /app
-
-# Install native compilation dependencies for better-sqlite3
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 RUN npm ci
@@ -114,7 +111,7 @@ When deploying to PaaS platforms:
 > 
 > To deploy on Vercel or AWS Lambda, you must either:
 > 1. Mount an external network volume (e.g., AWS EFS for Lambda), or
-> 2. Replace the `better-sqlite3` driver in `src/lib/db.ts` with a cloud-hosted SQL adapter (e.g., Turso / LibSQL, Neon Postgres, or Supabase).
+> 2. Replace the `node:sqlite` driver in `src/lib/db.ts` with a cloud-hosted SQL adapter (e.g., Turso / LibSQL, Neon Postgres, or Supabase).
 
 ---
 
@@ -123,4 +120,4 @@ When deploying to PaaS platforms:
 In production agency environments:
 1. **TLS / SSL Termination:** Place ContextRelay behind Nginx, Caddy, or Cloudflare with modern TLS 1.3 encryption.
 2. **Access Control:** Since ContextRelay does not implement internal user authentication, configure HTTP Basic Auth, Cloudflare Access (Zero Trust), Tailscale VPN, or an OAuth2 reverse proxy (e.g., `oauth2-proxy`) at the network boundary.
-3. **Payload Limits:** Configure your reverse proxy to allow file uploads up to 5MB (the application code enforces a strict 2MB limit per transcript).
+3. **Payload Limits:** Configure your reverse proxy to allow file uploads up to 10MB (the application code enforces a strict 5MB limit per transcript).

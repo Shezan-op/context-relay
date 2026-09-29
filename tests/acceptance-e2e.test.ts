@@ -12,7 +12,12 @@ import {
   listSourcesForClient,
 } from '../src/lib/db';
 import { ingestTranscript } from '../src/lib/ingestion';
-import { answerClientQuestion } from '../src/lib/retrieval';
+import {
+  answerClientQuestion,
+  generateClientHandoffBrief,
+  getDontRepeatItems,
+  getDecisionTimeline,
+} from '../src/lib/retrieval';
 import { HindsightWrapper } from '../src/lib/hindsight';
 
 test('Acceptance Pipeline: Complete End-to-End Flow (Criteria A - O)', async () => {
@@ -76,11 +81,20 @@ test('Acceptance Pipeline: Complete End-to-End Flow (Criteria A - O)', async () 
 
     const qLower = query.toLowerCase();
     const matched = bank.memories.filter((m) => {
+      if (qLower.includes('reject') || qLower.includes('repeat') || qLower.includes('dislike') || qLower.includes('fail')) {
+        return m.text.toLowerCase().includes('reject');
+      }
+      if (qLower.includes('decision') || qLower.includes('timeline') || qLower.includes('mandate')) {
+        return m.text.includes('PostgreSQL') || m.text.includes('TimescaleDB');
+      }
       if (qLower.includes('database') || qLower.includes('db') || qLower.includes('stack')) {
         return m.text.includes('PostgreSQL') || m.text.includes('TimescaleDB');
       }
       if (qLower.includes('stakeholder') || qLower.includes('approval') || qLower.includes('sarah')) {
         return m.text.includes('Sarah Jenkins');
+      }
+      if (qLower.includes('handoff') || qLower.includes('continuity') || qLower.includes('preference')) {
+        return true;
       }
       return false;
     });
@@ -205,6 +219,36 @@ test('Acceptance Pipeline: Complete End-to-End Flow (Criteria A - O)', async () 
   assert.match(query2.answer, /TimescaleDB/);
   assert.match(query2.answer, /PostgreSQL/);
 
+  // Step J2: Verify Don't Repeat This retrieves the rejected MongoDB approach
+  const dontRepeatA = await getDontRepeatItems(clientAId, { hindsight: mockHindsight });
+  assert.equal(dontRepeatA.hasEvidence, true);
+  assert.ok(dontRepeatA.items.length >= 1);
+  const mongoRej = dontRepeatA.items.find((i) => i.item.includes('MongoDB'));
+  assert.ok(mongoRej, 'MongoDB rejection must appear in Don\'t Repeat This');
+  assert.equal(mongoRej.status, 'active_rejection');
+
+  // Step J3: Verify Decision Timeline shows chronological evolution and superseded status
+  const timelineA = await getDecisionTimeline(clientAId, { hindsight: mockHindsight });
+  assert.equal(timelineA.hasEvidence, true);
+  assert.ok(timelineA.decisions.length >= 2);
+  const postgresDec = timelineA.decisions.find((d) => d.statement.includes('PostgreSQL on AWS RDS'));
+  const timescaleDec = timelineA.decisions.find((d) => d.statement.includes('TimescaleDB'));
+  assert.ok(postgresDec, 'PostgreSQL decision must exist in timeline');
+  assert.ok(timescaleDec, 'TimescaleDB decision must exist in timeline');
+  assert.equal(postgresDec.status, 'superseded', 'Earlier PostgreSQL decision must be marked superseded');
+  assert.equal(timescaleDec.status, 'current', 'Later TimescaleDB decision must be marked current');
+
+  // Step J4: Verify Handoff Brief contains the relevant continuity knowledge
+  const handoffA = await generateClientHandoffBrief(clientAId, {
+    hindsight: mockHindsight,
+    handoffLlmCaller: async (cName, ev) => ({
+      answer: `### 1. Current State\nTimescaleDB active\n### 2. Don't Repeat This\nMongoDB rejected`,
+    }),
+  });
+  assert.equal(handoffA.hasEvidence, true);
+  assert.match(handoffA.brief, /TimescaleDB active/);
+  assert.match(handoffA.brief, /MongoDB rejected/);
+
   // Step K: Verify a different client cannot retrieve client A's memory
   const clientBId = randomUUID();
   const bankB = `client:${clientBId}`;
@@ -224,4 +268,17 @@ test('Acceptance Pipeline: Complete End-to-End Flow (Criteria A - O)', async () 
   assert.equal(queryClientB.hasEvidence, false, 'Client B must have zero evidence from Client A');
   assert.equal(queryClientB.evidence.length, 0);
   assert.match(queryClientB.answer, /No relevant stored client memory found/);
+
+  // Client B Don't Repeat This, Timeline, and Handoff must also be completely empty
+  const dontRepeatB = await getDontRepeatItems(clientBId, { hindsight: mockHindsight });
+  assert.equal(dontRepeatB.hasEvidence, false);
+  assert.equal(dontRepeatB.items.length, 0);
+
+  const timelineB = await getDecisionTimeline(clientBId, { hindsight: mockHindsight });
+  assert.equal(timelineB.hasEvidence, false);
+  assert.equal(timelineB.decisions.length, 0);
+
+  const handoffB = await generateClientHandoffBrief(clientBId, { hindsight: mockHindsight });
+  assert.equal(handoffB.hasEvidence, false);
+  assert.equal(handoffB.evidence.length, 0);
 });
