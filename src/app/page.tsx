@@ -26,6 +26,8 @@ import {
   FileUp,
   LayoutDashboard,
   Users,
+  Edit2,
+  Download,
 } from 'lucide-react';
 
 interface Client {
@@ -188,6 +190,17 @@ export default function VioraApp() {
   const [openClientMenuId, setOpenClientMenuId] = useState<string | null>(null);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [isDeletingClient, setIsDeletingClient] = useState(false);
+
+  // Edit Client Modal state
+  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
+  const [editClientName, setEditClientName] = useState('');
+  const [isEditingClient, setIsEditingClient] = useState(false);
+  const [editClientError, setEditClientError] = useState<string | null>(null);
+
+  // Delete Source state
+  const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null);
+  const [isDeletingSource, setIsDeletingSource] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Collapsible sidebar state with localStorage
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -414,6 +427,87 @@ export default function VioraApp() {
       setGeneralError(err.message);
     } finally {
       setIsDeletingClient(false);
+    }
+  }
+
+  async function handleUpdateClient(e: React.FormEvent) {
+    e.preventDefault();
+    if (!clientToEdit) return;
+    const name = editClientName.trim();
+    if (!name) return;
+
+    setIsEditingClient(true);
+    setEditClientError(null);
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientToEdit.id, name }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update client name');
+
+      const updated = data.client as Client;
+      setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setClientToEdit(null);
+      setEditClientName('');
+    } catch (err: any) {
+      setEditClientError(err.message || 'Failed to update client name');
+    } finally {
+      setIsEditingClient(false);
+    }
+  }
+
+  async function confirmDeleteSource() {
+    if (!sourceToDelete) return;
+    setIsDeletingSource(true);
+    try {
+      const res = await fetch(`/api/sources?sourceId=${encodeURIComponent(sourceToDelete.id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete source document');
+      }
+
+      setSources((prev) => prev.filter((s) => s.id !== sourceToDelete.id));
+      setSourceToDelete(null);
+      if (selectedClientId) {
+        await loadDontRepeat(selectedClientId);
+        await loadTimeline(selectedClientId);
+      }
+    } catch (err: any) {
+      setGeneralError(err.message || 'Failed to delete source document');
+    } finally {
+      setIsDeletingSource(false);
+    }
+  }
+
+  async function handleExportData(format: 'json' | 'markdown' = 'json') {
+    if (!selectedClientId) return;
+    setIsExporting(true);
+    try {
+      const res = await fetch(`/api/export?clientId=${encodeURIComponent(selectedClientId)}&format=${format}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to export client memory');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ext = format === 'markdown' ? 'md' : 'json';
+      const safeName = (selectedClient?.name || 'client').replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.download = `${safeName}_institutional_memory.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setGeneralError(err.message || 'Failed to export data');
+    } finally {
+      setIsExporting(false);
     }
   }
 
@@ -907,6 +1001,20 @@ export default function VioraApp() {
                                 type="button"
                                 onClick={() => {
                                   setOpenClientMenuId(null);
+                                  setClientToEdit(c);
+                                  setEditClientName(c.name);
+                                  setEditClientError(null);
+                                }}
+                                className="btn btn-subtle btn-sm"
+                                style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--text-body)' }}
+                              >
+                                <Edit2 size={13} />
+                                <span>Edit name</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenClientMenuId(null);
                                   setClientToDelete(c);
                                 }}
                                 className="btn btn-subtle btn-sm"
@@ -962,11 +1070,50 @@ export default function VioraApp() {
               {/* 1) Title Row */}
               <div className="client-title-row">
                 <div className="client-title-group">
-                  <h1 className="client-page-title">{selectedClient.name}</h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h1 className="client-page-title">{selectedClient.name}</h1>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setClientToEdit(selectedClient);
+                        setEditClientName(selectedClient.name);
+                        setEditClientError(null);
+                      }}
+                      className="btn btn-subtle btn-sm"
+                      title="Edit client name"
+                      style={{ padding: '4px 6px' }}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
                   <div className="client-page-subtitle">{sectionTitles[activeTab]}</div>
                 </div>
 
                 <div className="client-header-actions">
+                  {/* Export Options */}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleExportData('markdown')}
+                      className="btn btn-secondary"
+                      disabled={isExporting}
+                      title="Export institutional memory as Markdown dossier"
+                    >
+                      <Download size={14} />
+                      <span>Export MD</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExportData('json')}
+                      className="btn btn-secondary"
+                      disabled={isExporting}
+                      title="Export complete memory data as JSON"
+                    >
+                      <Download size={14} />
+                      <span>Export JSON</span>
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -1266,6 +1413,7 @@ export default function VioraApp() {
                               <th style={{ padding: '8px 10px', fontWeight: 600 }}>Status</th>
                               <th style={{ padding: '8px 10px', fontWeight: 600 }}>Size</th>
                               <th style={{ padding: '8px 10px', fontWeight: 600 }}>Ingested at</th>
+                              <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'right' }}>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1291,6 +1439,18 @@ export default function VioraApp() {
                                 </td>
                                 <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
                                   {new Date(s.created_at).toLocaleDateString()}
+                                </td>
+                                <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSourceToDelete(s)}
+                                    className="btn btn-subtle btn-sm"
+                                    style={{ color: '#DC2626', padding: '4px 6px' }}
+                                    title="Delete transcript from memory"
+                                  >
+                                    <Trash2 size={13} />
+                                    <span>Delete</span>
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -1944,6 +2104,96 @@ export default function VioraApp() {
                 disabled={isDeletingClient}
               >
                 {isDeletingClient ? 'Deleting...' : 'Delete client'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Client Modal */}
+      {clientToEdit && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Edit client workspace name</h3>
+            <p className="modal-desc">
+              Update the registered client name for <strong>{clientToEdit.name}</strong>.
+            </p>
+            {editClientError && (
+              <div className="alert-error-box" style={{ marginBottom: '14px' }} role="alert">
+                <div className="alert-error-main">
+                  <div className="alert-error-text">
+                    <AlertCircle size={16} />
+                    <span>{editClientError}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleUpdateClient}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-title)' }} htmlFor="edit-client-name-input">
+                  Client name
+                </label>
+                <input
+                  id="edit-client-name-input"
+                  type="text"
+                  value={editClientName}
+                  onChange={(e) => setEditClientName(e.target.value)}
+                  placeholder="e.g. Acme Corporation"
+                  className="quick-notes-textarea"
+                  style={{ minHeight: '38px', height: '38px', resize: 'none' }}
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClientToEdit(null);
+                    setEditClientError(null);
+                  }}
+                  className="btn btn-secondary"
+                  disabled={isEditingClient}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isEditingClient || !editClientName.trim()}
+                >
+                  {isEditingClient ? 'Saving...' : 'Save changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Source Confirmation Modal */}
+      {sourceToDelete && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Delete source transcript</h3>
+            <p className="modal-desc">
+              Are you sure you want to remove <strong>{sourceToDelete.original_filename}</strong> from memory?
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={() => setSourceToDelete(null)}
+                className="btn btn-secondary"
+                disabled={isDeletingSource}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteSource}
+                className="btn btn-danger"
+                disabled={isDeletingSource}
+              >
+                {isDeletingSource ? 'Deleting...' : 'Delete source'}
               </button>
             </div>
           </div>

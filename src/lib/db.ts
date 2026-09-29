@@ -36,28 +36,29 @@ const globalForDb = globalThis as unknown as {
 
 export function getDatabase(): DatabaseSync {
   if (!globalForDb._vioraDb && !globalForDb._contextRelayDb) {
-    const fallbackLocal = fs.existsSync(path.join(process.cwd(), 'viora.sqlite'))
-      ? path.join(process.cwd(), 'viora.sqlite')
-      : fs.existsSync(path.join(process.cwd(), 'context_relay.sqlite'))
-      ? path.join(process.cwd(), 'context_relay.sqlite')
-      : path.join(process.cwd(), 'viora.sqlite');
-    const defaultDbPath = process.env.VERCEL
-      ? path.join('/tmp', 'viora.db')
-      : fallbackLocal;
-    const dbPath = process.env.DATABASE_PATH || defaultDbPath;
+    const rawPath = process.env.DATABASE_PATH || (process.env.VERCEL ? '/tmp/viora.db' : 'context_relay.sqlite');
+    const isMemory = rawPath === ':memory:';
+    const resolvedDbPath = isMemory
+      ? ':memory:'
+      : path.isAbsolute(rawPath)
+        ? rawPath
+        : path.resolve(/*turbopackIgnore: true*/ process.cwd(), rawPath);
     
-    // Ensure parent directory exists if a custom nested path is provided
-    const parentDir = path.dirname(path.resolve(/*turbopackIgnore: true*/ dbPath));
-    if (!fs.existsSync(parentDir)) {
-      fs.mkdirSync(parentDir, { recursive: true });
+    // Ensure parent directory exists for file-based DB
+    if (!isMemory) {
+      const parentDir = path.dirname(resolvedDbPath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
     }
 
-    const db = new DatabaseSync(dbPath);
+    const db = new DatabaseSync(resolvedDbPath);
 
-    // Enable WAL mode and foreign keys for performance and data integrity
+    // Enable WAL mode for disk databases and foreign keys for data integrity
     db.exec(`
-      PRAGMA journal_mode = WAL;
+      ${isMemory ? '' : 'PRAGMA journal_mode = WAL;'}
       PRAGMA foreign_keys = ON;
+      PRAGMA busy_timeout = 5000;
 
       CREATE TABLE IF NOT EXISTS clients (
         id TEXT PRIMARY KEY,
@@ -116,6 +117,13 @@ export function getClientRecord(id: string): ClientRecord | null {
   return (result as unknown as ClientRecord) || null;
 }
 
+export function updateClientRecord(id: string, name: string): ClientRecord | null {
+  const db = getDatabase();
+  const stmt = db.prepare('UPDATE clients SET name = ? WHERE id = ?');
+  stmt.run(name, id);
+  return getClientRecord(id);
+}
+
 export function deleteClientRecord(id: string): void {
   const db = getDatabase();
   const stmt = db.prepare('DELETE FROM clients WHERE id = ?');
@@ -153,6 +161,15 @@ export function updateSourceStatus(
   const db = getDatabase();
   const stmt = db.prepare('UPDATE sources SET ingestion_status = ?, error_message = ? WHERE id = ?');
   stmt.run(status, errorMessage ?? null, id);
+}
+
+export function deleteSourceRecord(id: string): SourceRecord | null {
+  const db = getDatabase();
+  const source = getSourceRecord(id);
+  if (!source) return null;
+  const stmt = db.prepare('DELETE FROM sources WHERE id = ?');
+  stmt.run(id);
+  return source;
 }
 
 export function listSourcesForClient(clientId: string): SourceRecord[] {

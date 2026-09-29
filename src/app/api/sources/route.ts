@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listSourcesForClient } from '@/lib/db';
+import { listSourcesForClient, getSourceRecord, getClientRecord, deleteSourceRecord, resolveKey } from '@/lib/db';
+import { getHindsightClient } from '@/lib/hindsight';
 import { ingestTranscript } from '@/lib/ingestion';
 
 export async function GET(req: NextRequest) {
@@ -91,6 +92,48 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || 'Failed to ingest transcript' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const sourceId = searchParams.get('sourceId') || searchParams.get('id');
+
+    if (!sourceId) {
+      return NextResponse.json(
+        { error: 'sourceId query parameter is required.' },
+        { status: 400 }
+      );
+    }
+
+    const source = getSourceRecord(sourceId);
+    if (!source) {
+      return NextResponse.json(
+        { error: `Source with ID '${sourceId}' not found.` },
+        { status: 404 }
+      );
+    }
+
+    // Attempt to delete from Hindsight if configured and document exists
+    const client = getClientRecord(source.client_id);
+    const hindsightKey = resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY');
+    if (client && hindsightKey && source.hindsight_document_id) {
+      try {
+        const hindsight = getHindsightClient();
+        await hindsight.deleteDocument(client.hindsight_bank_id, source.hindsight_document_id);
+      } catch {
+        // Non-fatal if document does not exist in Hindsight
+      }
+    }
+
+    deleteSourceRecord(sourceId);
+    return NextResponse.json({ success: true, sourceId });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'Failed to delete source document' },
       { status: 500 }
     );
   }

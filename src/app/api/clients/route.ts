@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { createClientRecord, listClientRecords, deleteClientRecord, resolveKey } from '@/lib/db';
+import { createClientRecord, listClientRecords, getClientRecord, updateClientRecord, deleteClientRecord, resolveKey } from '@/lib/db';
 import { getHindsightClient } from '@/lib/hindsight';
 
 export async function GET() {
@@ -69,6 +69,54 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const clientId = (body.id || body.clientId || '').trim();
+    const name = (body.name || '').trim();
+
+    if (!clientId) {
+      return NextResponse.json(
+        { error: 'clientId is required.' },
+        { status: 400 }
+      );
+    }
+
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Client name cannot be empty.' },
+        { status: 400 }
+      );
+    }
+
+    const updated = updateClientRecord(clientId, name);
+    if (!updated) {
+      return NextResponse.json(
+        { error: `Client with ID '${clientId}' not found.` },
+        { status: 404 }
+      );
+    }
+
+    // Also update bank name in Hindsight if configured
+    const hindsightKey = resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY');
+    if (hindsightKey) {
+      try {
+        const hindsight = getHindsightClient();
+        await hindsight.ensureClientBank(updated.hindsight_bank_id, name);
+      } catch {
+        // Non-fatal if bank doesn't exist yet
+      }
+    }
+
+    return NextResponse.json({ client: updated });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'Failed to update client' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -79,6 +127,20 @@ export async function DELETE(req: NextRequest) {
         { error: 'clientId query parameter is required.' },
         { status: 400 }
       );
+    }
+
+    const client = getClientRecord(clientId);
+    if (client) {
+      // Clean up Hindsight bank if configured
+      const hindsightKey = resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY');
+      if (hindsightKey) {
+        try {
+          const hindsight = getHindsightClient();
+          await hindsight.deleteBank(client.hindsight_bank_id);
+        } catch {
+          // Non-fatal if bank already removed
+        }
+      }
     }
 
     deleteClientRecord(clientId);

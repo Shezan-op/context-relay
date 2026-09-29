@@ -137,6 +137,36 @@ export class HindsightWrapper {
     }
   }
 
+  /**
+   * Deletes a bank and all its associated memories from Hindsight.
+   */
+  async deleteBank(bankId: string): Promise<void> {
+    try {
+      await this.client.deleteBank(bankId);
+    } catch (err: any) {
+      const errorMsg = err?.message || String(err);
+      if (errorMsg.includes('404') || err?.status === 404) {
+        return;
+      }
+      throw new Error(`Failed to delete Hindsight bank ${bankId}: ${errorMsg}`);
+    }
+  }
+
+  /**
+   * Deletes a document from the specified bank.
+   */
+  async deleteDocument(bankId: string, documentId: string): Promise<void> {
+    try {
+      await this.client.deleteDocument(bankId, documentId);
+    } catch (err: any) {
+      const errorMsg = err?.message || String(err);
+      if (errorMsg.includes('404') || err?.status === 404) {
+        return;
+      }
+      throw new Error(`Failed to delete Hindsight document ${documentId}: ${errorMsg}`);
+    }
+  }
+
   getBaseUrl(): string {
     return this.baseUrl;
   }
