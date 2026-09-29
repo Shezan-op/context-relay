@@ -1,8 +1,8 @@
-# ContextRelay
+# Viora
 
 **Durable Client Memory for Agency Account Continuity**
 
-ContextRelay preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
+Viora preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
 
 ---
 
@@ -12,9 +12,10 @@ Agency-client knowledge loss: When an account manager leaves, years of context w
 
 Solution: an agent that retains every client decision and preference, and recalls it for anyone new on the account.
 
-ContextRelay is not a generic AI assistant, not a generic chatbot, not a document Q&A tool, not a RAG chatbot, not a meeting summarizer, and not a transcript search engine. 
+Viora is not a generic AI assistant, not a generic chatbot, not a document Q&A tool, not a RAG chatbot, not a meeting summarizer, and not a transcript search engine.
 
 The product story is:
+
 **An agency should not lose client knowledge when a human leaves the account.**
 
 ---
@@ -29,15 +30,19 @@ The product story is:
    - Who has sole authority to approve deliverables and budget adjustments.
    - What decisions were made and why.
    - What requirements shifted over time.
+
 2. **Account Manager A leaves the agency.** The documents, contracts, and transcripts may still exist in shared drives, but the institutional context is gone from the new person's head.
+
 3. **Account Manager B takes over.** B makes decisions without knowing the history, repeats old mistakes, asks questions that were answered months ago, proposes solutions the client already rejected, and misidentifies sign-off authorities.
-4. **ContextRelay prevents that knowledge loss.** Conversations are retained as durable, client-isolated memory. Account Manager B asks ContextRelay before client meetings, receives evidence-grounded recall, and continues the relationship instead of restarting it.
+
+4. **Viora prevents that knowledge loss.** Conversations are retained as durable, client-isolated memory. Account Manager B asks Viora before client meetings, receives evidence-grounded recall, and continues the relationship instead of restarting it.
 
 ---
 
 ## 3. How Hindsight Powers the Memory Layer
 
 Hindsight is not a generic vector index or simple retrieval vendor. It is the core long-term memory infrastructure:
+
 - **Client-Specific Memory Banks:** Complete physical isolation using the naming pattern `client:<uuid>`.
 - **Automatic Retention Without Manual Management:** The account manager never has to highlight text or type "remember this." Hindsight's retain pipeline extracts durable business knowledge according to its configured memory mission.
 - **Fact Categorization:** Decomposes conversations into structured memory units: `world` (objective facts and constraints), `experience` (events, attempts, outcomes), and `observation` (patterns and dynamics).
@@ -49,7 +54,7 @@ Hindsight is not a generic vector index or simple retrieval vendor. It is the co
 
 ## 4. The Three Core Client Continuity Features
 
-ContextRelay organizes institutional knowledge into three unified continuity workflows:
+Viora organizes institutional knowledge into three unified continuity workflows:
 
 1. **Don't Repeat This (`/api/dont-repeat`)**:
    - Surfaces what the agency previously tried with this client that the new account manager should not repeat.
@@ -71,7 +76,7 @@ ContextRelay organizes institutional knowledge into three unified continuity wor
 
 ## 5. How the Pipeline Works
 
-```
+```text
 INPUT
   ↓ Real Client Transcript File (.txt or .md)
 INGEST
@@ -88,72 +93,3 @@ APPLICATION LLM
   ↓ LLM synthesizes a grounded answer strictly from retrieved evidence
 OUTPUT + EVIDENCE
   ↓ UI displays direct answer with verifiable quotes, dates, and source snippets
-```
-
----
-
-## 6. Zero Seed / Zero Demo Data Guarantee
-
-ContextRelay starts **100% empty**:
-- Zero preloaded clients
-- Zero fake transcripts
-- Zero seeded memories or synthetic chats
-- Zero hardcoded demo metrics
-- The application only ingests and reflects real user-provided data.
-
----
-
-## 7. Documentation Index
-
-- **Technical Architecture & Pipeline:** [`docs/context-relay-technical.md`](docs/context-relay-technical.md)
-- **Product Story & Essay:** [`docs/article.md`](docs/article.md)
-- **LinkedIn / Social Briefing:** [`docs/linkedin-post.md`](docs/linkedin-post.md)
-- **Video Walkthrough Script:** [`docs/video-script.md`](docs/video-script.md)
-- **Three Core Scenarios:** [`docs/scenarios/context-relay-scenarios.md`](docs/scenarios/context-relay-scenarios.md)
-- **Interactive Visual Story & Pipeline:** [`docs/scenarios/context-relay-scenarios.html`](docs/scenarios/context-relay-scenarios.html)
-- **Live Demo Runbook:** [`DEMO_RUNBOOK.md`](DEMO_RUNBOOK.md)
-- **Architecture Reference:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
-- **Data Flow Contract:** [`DATA_FLOW.md`](DATA_FLOW.md)
-
----
-
-## 8. Prerequisites & Environment Setup
-
-- **Node.js**: v20 or higher (v24 LTS recommended)
-- **Hindsight Server**: Running locally or remotely (e.g. `http://localhost:8888`)
-- **LLM API Key**: Groq (recommended for low-latency answering), OpenAI, Anthropic, or Gemini
-
-### Environment Variables (.env.local)
-
-```env
-# Hindsight API Configuration
-HINDSIGHT_API_URL=http://localhost:8888
-HINDSIGHT_API_KEY=
-
-# Application LLM Provider (groq, openai, anthropic, or gemini)
-LLM_PROVIDER=groq
-GROQ_API_KEY=gsk_your_groq_api_key_here
-
-# SQLite Database Path (defaults to ./context_relay.sqlite)
-DATABASE_PATH=./context_relay.sqlite
-```
-
----
-
-## 9. Quickstart
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Run automated verification suite
-npm test
-
-# 3. Build production bundle
-npm run build
-
-# 4. Start local development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view ContextRelay.
