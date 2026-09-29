@@ -485,9 +485,13 @@ export default function VioraApp() {
 
   async function handleExportData(format: 'json' | 'markdown' = 'json') {
     if (!selectedClientId) return;
+    return handleExportSpecificClient(selectedClientId, selectedClient?.name || 'client', format);
+  }
+
+  async function handleExportSpecificClient(clientId: string, clientName: string, format: 'json' | 'markdown' = 'json') {
     setIsExporting(true);
     try {
-      const res = await fetch(`/api/export?clientId=${encodeURIComponent(selectedClientId)}&format=${format}`);
+      const res = await fetch(`/api/export?clientId=${encodeURIComponent(clientId)}&format=${format}`);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to export client memory');
@@ -498,7 +502,7 @@ export default function VioraApp() {
       const a = document.createElement('a');
       a.href = url;
       const ext = format === 'markdown' ? 'md' : 'json';
-      const safeName = (selectedClient?.name || 'client').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeName = clientName.replace(/[^a-zA-Z0-9_-]/g, '_');
       a.download = `${safeName}_institutional_memory.${ext}`;
       document.body.appendChild(a);
       a.click();
@@ -2083,12 +2087,59 @@ export default function VioraApp() {
       {/* Delete Client Confirmation Modal */}
       {clientToDelete && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 className="modal-title">Delete client workspace</h3>
-            <p className="modal-desc">
-              This will remove <strong>{clientToDelete.name}</strong> from Viora. Any associated local source records will also be removed.
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
+            <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--red-600, #dc2626)' }}>
+              <AlertCircle size={20} />
+              <span>Delete organization & memory bank?</span>
+            </h3>
+            
+            <p className="modal-desc" style={{ marginTop: '8px' }}>
+              Are you sure you want to delete <strong>{clientToDelete.name}</strong>?
             </p>
-            <div className="modal-actions">
+
+            <div className="alert-error-box" style={{ margin: '14px 0', borderLeft: '4px solid var(--red-600, #dc2626)' }} role="alert">
+              <div className="alert-error-main">
+                <div className="alert-error-text" style={{ fontSize: '13px', lineHeight: '1.5' }}>
+                  <strong>Warning: All institutional memories will be permanently deleted!</strong>
+                  <div style={{ marginTop: '4px', opacity: 0.9 }}>
+                    This action completely removes the client workspace, local transcript source records, and destroys the isolated Hindsight cloud memory bank (<code>{clientToDelete.hindsight_bank_id}</code>).
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-subtle, #f8fafc)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-title)', marginBottom: '4px' }}>
+                Recommendation: Export memories before deletion
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                Download the complete institutional memory dossier so no important decisions or rejected directions are lost.
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleExportSpecificClient(clientToDelete.id, clientToDelete.name, 'markdown')}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '5px 10px', height: '30px' }}
+                  disabled={isExporting}
+                >
+                  <Download size={13} />
+                  <span>Export MD</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportSpecificClient(clientToDelete.id, clientToDelete.name, 'json')}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '5px 10px', height: '30px' }}
+                  disabled={isExporting}
+                >
+                  <Download size={13} />
+                  <span>Export JSON</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
               <button
                 type="button"
                 onClick={() => setClientToDelete(null)}
@@ -2103,7 +2154,7 @@ export default function VioraApp() {
                 className="btn btn-danger"
                 disabled={isDeletingClient}
               >
-                {isDeletingClient ? 'Deleting...' : 'Delete client'}
+                {isDeletingClient ? 'Deleting memory bank...' : 'Permanently delete all'}
               </button>
             </div>
           </div>

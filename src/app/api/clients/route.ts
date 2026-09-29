@@ -38,23 +38,37 @@ export async function POST(req: NextRequest) {
       created_at: now,
     };
 
-    // Save record in SQLite first (always succeeds)
-    createClientRecord(client);
-
-    // Optionally provision bank in Hindsight — only if API key is configured
     const hindsightKey = resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY');
     let hindsightWarning: string | undefined;
+    let bankProvisioned = false;
 
+    // 1. Provision bank in Hindsight first if configured
     if (hindsightKey) {
       try {
         const hindsight = getHindsightClient();
         await hindsight.ensureClientBank(hindsightBankId, name);
+        bankProvisioned = true;
       } catch (hindsightErr: any) {
-        // Non-fatal: client is saved locally, Hindsight can be provisioned later
-        hindsightWarning = `Client saved locally. Hindsight bank provisioning failed: ${hindsightErr?.message || hindsightErr}`;
+        // Non-fatal: can still create locally
+        hindsightWarning = `Hindsight bank provisioning failed: ${hindsightErr?.message || hindsightErr}`;
       }
     } else {
       hindsightWarning = 'Hindsight API key not configured. Client saved locally — add your Hindsight key in Settings to enable memory features.';
+    }
+
+    // 2. Persist in local SQLite database; if this fails, clean up the provisioned Hindsight bank to prevent orphans
+    try {
+      createClientRecord(client);
+    } catch (dbErr: any) {
+      if (bankProvisioned && hindsightKey) {
+        try {
+          const hindsight = getHindsightClient();
+          await hindsight.deleteBank(hindsightBankId);
+        } catch {
+          // Best effort rollback
+        }
+      }
+      throw dbErr;
     }
 
     return NextResponse.json(
