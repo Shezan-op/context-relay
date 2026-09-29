@@ -180,6 +180,7 @@ export default function VioraApp() {
   const [isCreatingClient, setIsCreatingClient] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createClientError, setCreateClientError] = useState<string | null>(null);
 
   // Clients Popup state
   const [isClientsPopupOpen, setIsClientsPopupOpen] = useState(false);
@@ -357,6 +358,7 @@ export default function VioraApp() {
     if (!name) return;
 
     setIsCreatingClient(true);
+    setCreateClientError(null);
     setGeneralError(null);
     try {
       const res = await fetch('/api/clients', {
@@ -371,9 +373,11 @@ export default function VioraApp() {
       setClients((prev) => [created, ...prev]);
       setSelectedClientId(created.id);
       setNewClientName('');
+      setCreateClientError(null);
       setShowCreateModal(false);
       setIsClientsPopupOpen(false);
     } catch (err: any) {
+      setCreateClientError(err.message || 'Failed to create client workspace');
       setGeneralError(err.message);
     } finally {
       setIsCreatingClient(false);
@@ -1857,6 +1861,16 @@ export default function VioraApp() {
             <p className="modal-desc">
               Each client receives a dedicated, isolated Hindsight memory bank to ensure strict confidentiality.
             </p>
+            {createClientError && (
+              <div className="alert-error-box" style={{ marginBottom: '14px' }} role="alert">
+                <div className="alert-error-main">
+                  <div className="alert-error-text">
+                    <AlertCircle size={16} />
+                    <span>{createClientError}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleCreateClient}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-title)' }} htmlFor="new-client-name-input">
@@ -1877,7 +1891,10 @@ export default function VioraApp() {
               <div className="modal-actions">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateClientError(null);
+                  }}
                   className="btn btn-secondary"
                   disabled={isCreatingClient}
                 >

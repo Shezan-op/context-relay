@@ -18,10 +18,11 @@ export class HindsightWrapper {
   constructor(config?: Partial<HindsightConfig>) {
     this.baseUrl = (config?.baseUrl || resolveKey('HINDSIGHT_API_URL', 'HINDSIGHT_API_URL') || process.env.HINDSIGHT_API_URL || 'http://localhost:8888').trim();
     const apiKey = config?.apiKey || resolveKey('HINDSIGHT_API_KEY', 'HINDSIGHT_API_KEY') || process.env.HINDSIGHT_API_KEY;
-
+    const trimmedKey = apiKey ? apiKey.trim() : undefined;
     this.client = new HindsightClient({
       baseUrl: this.baseUrl,
-      headers: apiKey ? { Authorization: `Bearer ${apiKey.trim()}` } : undefined,
+      apiKey: trimmedKey,
+      headers: trimmedKey ? { Authorization: `Bearer ${trimmedKey}` } : undefined,
     });
   }
 

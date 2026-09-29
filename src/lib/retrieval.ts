@@ -35,6 +35,19 @@ export interface RetrievalOptions {
   ) => Promise<LLMAnswerResult>;
 }
 
+function cleanFactText(text: string): string {
+  if (!text) return '';
+  // Hindsight world facts / observations often append '| When: ... | Involving: ...'
+  // Clean this trailing metadata for clean user presentation
+  let cleaned = text;
+  if (cleaned.includes(' | ')) {
+    cleaned = cleaned.split(' | ')[0].trim();
+  }
+  // Strip surrounding quotes if present
+  cleaned = cleaned.replace(/^["']|["']$/g, '').trim();
+  return cleaned;
+}
+
 function getSourceDisplayName(docId?: string | null): string {
   if (!docId) return 'Client conversation transcript';
   try {
@@ -211,7 +224,7 @@ export async function getDontRepeatItems(
 
     items.push({
       id: `rej-${ev.id}`,
-      item: text,
+      item: cleanFactText(text),
       status,
       reason,
       date,
@@ -286,7 +299,7 @@ export async function getDecisionTimeline(
     const source = getSourceDisplayName(ev.documentId);
     decisionItems.push({
       id: `dec-${ev.id}`,
-      statement: text,
+      statement: cleanFactText(text),
       status: 'current' as DecisionStatus,
       date,
       source,
