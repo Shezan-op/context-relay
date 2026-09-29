@@ -110,6 +110,12 @@ export function getClientRecord(id: string): ClientRecord | null {
   return (result as unknown as ClientRecord) || null;
 }
 
+export function deleteClientRecord(id: string): void {
+  const db = getDatabase();
+  const stmt = db.prepare('DELETE FROM clients WHERE id = ?');
+  stmt.run(id);
+}
+
 // Source repository functions
 export function createSourceRecord(source: SourceRecord): void {
   const db = getDatabase();

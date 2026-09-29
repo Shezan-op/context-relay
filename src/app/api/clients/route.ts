@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { createClientRecord, listClientRecords, resolveKey } from '@/lib/db';
+import { createClientRecord, listClientRecords, deleteClientRecord, resolveKey } from '@/lib/db';
 import { getHindsightClient } from '@/lib/hindsight';
 
 export async function GET() {
@@ -64,6 +64,28 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || 'Failed to create client' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const clientId = searchParams.get('clientId');
+
+    if (!clientId) {
+      return NextResponse.json(
+        { error: 'clientId query parameter is required.' },
+        { status: 400 }
+      );
+    }
+
+    deleteClientRecord(clientId);
+    return NextResponse.json({ success: true, clientId });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'Failed to delete client' },
       { status: 500 }
     );
   }
