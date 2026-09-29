@@ -113,10 +113,10 @@ export function createSourceRecord(source: SourceRecord): void {
     source.original_filename,
     source.content_type,
     source.size_bytes,
-    source.meeting_date,
+    source.meeting_date ?? null,
     source.hindsight_document_id,
     source.ingestion_status,
-    source.error_message,
+    source.error_message ?? null,
     source.created_at
   );
 }
@@ -128,7 +128,7 @@ export function updateSourceStatus(
 ): void {
   const db = getDatabase();
   const stmt = db.prepare('UPDATE sources SET ingestion_status = ?, error_message = ? WHERE id = ?');
-  stmt.run(status, errorMessage, id);
+  stmt.run(status, errorMessage ?? null, id);
 }
 
 export function listSourcesForClient(clientId: string): SourceRecord[] {

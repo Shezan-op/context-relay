@@ -108,5 +108,6 @@ export interface ClientHandoffResponse {
   message?: string;
   dontRepeat?: RejectedItem[];
   decisions?: DecisionItem[];
+  generatedAt?: string;
 }
 

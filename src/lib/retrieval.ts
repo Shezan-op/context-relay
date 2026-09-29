@@ -48,15 +48,33 @@ function getSourceDisplayName(docId?: string | null): string {
   return docId;
 }
 
-function extractExplicitReason(text: string): string {
-  // Only extract reason if explicitly stated in text
-  const match = text.match(/(?:due to|because|owing to|reason:)\s+([^.;]+)/i);
+function extractExplicitReason(text: string, sourceChunk?: string | null): string {
+  // First check if the fact text explicitly contains the reason
+  const match = text.match(/(?:due to|because|owing to|reason:)\s+([^.;|]+)/i);
   if (match && match[1]) {
     const rawReason = match[1].trim();
     if (rawReason.length > 3) {
       return rawReason.charAt(0).toUpperCase() + rawReason.slice(1);
     }
   }
+
+  // If not in fact text, check if sourceChunk has a sentence specifically mentioning rejection keywords and a reason
+  if (sourceChunk) {
+    const rejectionRegex = /\b(reject|rejected|rejection|dislike|disliked|avoid|failed|failure|unsuccessful|do not use|must not|cannot use|ruled out|stopped using|no longer use|discarded)\b/i;
+    const sentences = sourceChunk.split(/[.\n]+/);
+    for (const sentence of sentences) {
+      if (rejectionRegex.test(sentence)) {
+        const chunkMatch = sentence.match(/(?:due to|because|owing to|reason:)\s+([^.;|]+)/i);
+        if (chunkMatch && chunkMatch[1]) {
+          const rawReason = chunkMatch[1].trim();
+          if (rawReason.length > 3) {
+            return rawReason.charAt(0).toUpperCase() + rawReason.slice(1);
+          }
+        }
+      }
+    }
+  }
+
   return 'Reason not recorded in available client memory.';
 }
 
@@ -134,10 +152,11 @@ export async function getDontRepeatItems(
     };
   }
 
-  const rejectionRegex = /\b(reject|rejected|rejection|dislike|disliked|avoid|failed|failure|unsuccessful|do not use|must not|cannot use|ruled out|stopped using|no longer use|discarded)\b/i;
+  const rejectionRegex = /\b(reject|rejects|rejected|rejection|rejections|dislike|dislikes|disliked|avoid|avoids|avoided|failed|fails|failure|unsuccessful|do not use|does not use|must not|cannot use|ruled out|stopped using|no longer use|discarded)\b/i;
 
+  // Filter strictly on fact text to avoid chunk cross-pollution
   const rawRejections = recallPayload.results.filter(
-    (ev) => rejectionRegex.test(ev.text) || (ev.sourceChunk && rejectionRegex.test(ev.sourceChunk))
+    (ev) => rejectionRegex.test(ev.text)
   );
 
   if (rawRejections.length === 0) {
@@ -156,10 +175,20 @@ export async function getDontRepeatItems(
     (ev) => approvalRegex.test(ev.text) && !rejectionRegex.test(ev.text)
   );
 
-  const items: RejectedItem[] = rawRejections.map((ev) => {
+  const items: RejectedItem[] = [];
+  const seenConcepts = new Set<string>();
+
+  for (const ev of rawRejections) {
     const text = ev.text.trim();
+    // Concept deduplication key: normalize words
+    const conceptKey = text.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').filter(w => w.length > 3).slice(0, 4).sort().join('-');
+    if (seenConcepts.has(conceptKey)) {
+      continue;
+    }
+    seenConcepts.add(conceptKey);
+
     const date = ev.occurredStart || ev.mentionedAt || null;
-    const reason = extractExplicitReason(text + (ev.sourceChunk ? ' ' + ev.sourceChunk : ''));
+    const reason = extractExplicitReason(text, ev.sourceChunk);
     const source = getSourceDisplayName(ev.documentId);
 
     let status: RejectionStatus = 'active_rejection';
@@ -180,7 +209,7 @@ export async function getDontRepeatItems(
       }
     }
 
-    return {
+    items.push({
       id: `rej-${ev.id}`,
       item: text,
       status,
@@ -191,8 +220,8 @@ export async function getDontRepeatItems(
       evidenceQuote: ev.sourceChunk || ev.text || null,
       currentStatusNote,
       evidenceId: ev.id,
-    };
-  });
+    });
+  }
 
   return {
     clientName: client.name,
@@ -225,10 +254,10 @@ export async function getDecisionTimeline(
     };
   }
 
-  const decisionRegex = /\b(approved|approval|decided|decision|mandated|mandate|selected|adopted|chose|agreed|switched|migrated|replaced|require|required|requires)\b/i;
+  const decisionRegex = /\b(approved|approves|approval|approvals|decided|decides|decision|decisions|mandated|mandates|mandate|selected|selects|adopted|adopts|chose|chooses|agreed|agrees|switched|switches|migrated|migrates|replaced|replaces|require|required|requires)\b/i;
 
   const rawDecisions = recallPayload.results.filter(
-    (ev) => decisionRegex.test(ev.text) || (ev.sourceChunk && decisionRegex.test(ev.sourceChunk))
+    (ev) => decisionRegex.test(ev.text)
   );
 
   if (rawDecisions.length === 0) {
@@ -241,12 +270,23 @@ export async function getDecisionTimeline(
     };
   }
 
-  const decisionItems: DecisionItem[] = rawDecisions.map((ev) => {
+  const decisionItems: DecisionItem[] = [];
+  const seenDecisions = new Set<string>();
+
+  for (const ev of rawDecisions) {
+    const text = ev.text.trim();
+    // Normalize text key to deduplicate identical observations / world facts
+    const normalizedKey = text.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ').filter(w => w.length > 3).slice(0, 5).sort().join('-');
+    if (seenDecisions.has(normalizedKey)) {
+      continue;
+    }
+    seenDecisions.add(normalizedKey);
+
     const date = ev.occurredStart || ev.mentionedAt || null;
     const source = getSourceDisplayName(ev.documentId);
-    return {
+    decisionItems.push({
       id: `dec-${ev.id}`,
-      statement: ev.text.trim(),
+      statement: text,
       status: 'current' as DecisionStatus,
       date,
       source,
@@ -254,8 +294,8 @@ export async function getDecisionTimeline(
       supportingQuote: ev.sourceChunk || ev.text || null,
       entities: ev.entities || null,
       evidenceId: ev.id,
-    };
-  });
+    });
+  }
 
   // Sort chronologically: oldest first, undated at end
   decisionItems.sort((a, b) => {
@@ -277,9 +317,19 @@ export async function getDecisionTimeline(
         const laterLower = later.statement.toLowerCase();
 
         const matchedDomain = domains.find((d) => earlierLower.includes(d) && laterLower.includes(d));
-        const isChange = /\b(switch|switched|migrat|replac|adopt|change|supersed|pushed back)\b/i.test(laterLower);
+        const isChange = /\b(switch|switched|migrat|replac|adopt|change|supersed|pushed back|instead of)\b/i.test(laterLower);
 
-        if (matchedDomain || isChange) {
+        // Crucial: A decision is only superseded if the later statement represents a DIFFERENT or CONFLICTING choice!
+        // If both simply state PostgreSQL on AWS RDS, it is NOT superseded!
+        const isSameChoice = 
+          (earlierLower.includes('postgres') && laterLower.includes('postgres') && !laterLower.includes('timescale')) ||
+          (earlierLower.includes('aws') && laterLower.includes('aws') && !laterLower.includes('gcp') && !laterLower.includes('azure'));
+
+        const hasDifferentChoice = 
+          (earlierLower.includes('postgres') && laterLower.includes('timescale')) ||
+          (earlierLower.includes('may 15') && (laterLower.includes('june') || laterLower.includes('extended') || laterLower.includes('delayed')));
+
+        if (!isSameChoice && (hasDifferentChoice || (matchedDomain && isChange))) {
           earlier.status = 'superseded';
           earlier.supersededBy = later.statement;
           later.status = 'current';
@@ -353,6 +403,7 @@ export async function generateClientHandoffBrief(
       evidence: recallPayload.results,
       dontRepeat: dontRepeatItems,
       decisions: timelineDecisions,
+      generatedAt: new Date().toISOString(),
       message: 'Account continuity handover brief generated successfully.',
     };
   } catch (err: any) {

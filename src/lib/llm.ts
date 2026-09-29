@@ -151,7 +151,7 @@ async function callOpenAICompatible(
 ): Promise<LLMAnswerResult> {
   const isGroq = provider === 'groq';
   const baseUrl = process.env.LLM_API_BASE_URL || (isGroq ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1');
-  const defaultModel = isGroq ? 'openai/gpt-oss-120b' : 'gpt-4o-mini';
+  const defaultModel = isGroq ? 'qwen/qwen3.8-27b' : 'gpt-4o-mini';
   const model = process.env.LLM_MODEL || defaultModel;
 
   const response = await fetch(`${baseUrl}/chat/completions`, {

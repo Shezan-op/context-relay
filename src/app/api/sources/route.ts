@@ -35,8 +35,9 @@ export async function POST(req: NextRequest) {
     let contentType = 'text/plain';
 
     if (contentTypeHeader.includes('multipart/form-data')) {
+      const { searchParams } = new URL(req.url);
       const formData = await req.formData();
-      clientId = (formData.get('clientId') as string || '').trim();
+      clientId = (formData.get('clientId') as string || searchParams.get('clientId') || '').trim();
       const file = formData.get('file') as File | null;
 
       if (!file) {
