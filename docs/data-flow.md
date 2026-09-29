@@ -1,6 +1,6 @@
-# ContextRelay End-to-End Data Flow
+# Viora End-to-End Data Flow
 
-This document specifies the exact data transformations, transport protocols, module invocations, and storage lifecycles in ContextRelay from the moment a transcript is uploaded to the delivery of a grounded answer or handoff brief.
+This document specifies the exact data transformations, transport protocols, module invocations, and storage lifecycles in Viora from the moment a transcript is uploaded to the delivery of a grounded answer or handoff brief.
 
 ---
 

@@ -1,14 +1,14 @@
-# MASTER BUILD PROMPT. CONTEXTRELAY
+# MASTER BUILD PROMPT. VIORA
 
 You are the principal product architect, senior full-stack engineer, Hindsight engineer, and QA engineer responsible for building this product from an empty repository.
 
-Product name: ContextRelay
+Product name: Viora
 
 Your job is NOT to invent a bigger product. Your job is to build one small, working product correctly from first principles.
 
 The product solves one problem: agency-client knowledge disappears when the person who handled the account leaves, so the next person repeats old mistakes or asks the client the same questions again.
 
-ContextRelay turns real client meeting transcripts into durable client memory using Hindsight, then retrieves that memory later to answer questions for the next account manager.
+Viora turns real client meeting transcripts into durable client memory using Hindsight, then retrieves that memory later to answer questions for the next account manager.
 
 The core pipeline MUST remain understandable as:
 
@@ -100,7 +100,7 @@ Do not add another pipeline unless a requirement below makes it unavoidable.
 
 34. The system must also support the same ingestion service receiving text programmatically from the server for testing, but the UI does not need multiple ingestion paths.
 
-35. Do not add audio recording or transcription. The transcript already exists before ContextRelay receives it.
+35. Do not add audio recording or transcription. The transcript already exists before Viora receives it.
 
 36. Do not make the user manually select which facts to remember.
 
@@ -136,7 +136,7 @@ Do not add another pipeline unless a requirement below makes it unavoidable.
 1. AI PROJECT CLARITY GATE
 ----------------------------------------------------------------
 
-Before writing code, answer EVERY question below. The answers must describe the exact ContextRelay MVP you are going to build.
+Before writing code, answer EVERY question below. The answers must describe the exact Viora MVP you are going to build.
 
 ========================
 1. PRODUCT IN ONE SENTENCE
@@ -607,7 +607,7 @@ That answer defines the MVP.
 After answering the clarity gate, freeze these product decisions unless a genuine contradiction is found.
 
 PRODUCT:
-ContextRelay is a single-workspace agency client-memory application. It turns real client meeting transcripts into durable client-specific memory and later uses that memory to answer account questions so new team members do not repeat old mistakes.
+Viora is a single-workspace agency client-memory application. It turns real client meeting transcripts into durable client-specific memory and later uses that memory to answer account questions so new team members do not repeat old mistakes.
 
 USER:
 An agency account manager or agency team member responsible for a client account.
@@ -729,7 +729,7 @@ Browser local state may remember non-sensitive UI state such as the currently se
 
 PHASE A. CLIENT CREATION
 
-1. User opens ContextRelay.
+1. User opens Viora.
 2. Empty state is shown if no clients exist.
 3. User creates a client by entering the client name.
 4. Server creates a SQLite client record.
@@ -821,7 +821,7 @@ Deterministic application logic handles:
 
 Implement a strong system prompt for the answer-generation LLM. It should communicate:
 
-“You answer questions about a specific client account using only the memory evidence supplied by ContextRelay. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful and direct. After the answer, provide concise evidence references from the supplied source metadata/chunks.”
+“You answer questions about a specific client account using only the memory evidence supplied by Viora. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful and direct. After the answer, provide concise evidence references from the supplied source metadata/chunks.”
 
 Use a structured response format if the selected LLM provider supports reliable structured output. Keep the structure minimal. Recommended logical fields:
 
@@ -1123,7 +1123,7 @@ Include one simple architecture diagram.
 
 README must explain:
 
-- what ContextRelay is
+- what Viora is
 - the one problem it solves
 - how the pipeline works
 - prerequisites
@@ -1153,7 +1153,7 @@ Do not generate or include demo seed data.
 
 The runbook should show:
 
-1. Start with an empty ContextRelay installation.
+1. Start with an empty Viora installation.
 2. Create a real client.
 3. Upload a real meeting transcript.
 4. Show that Hindsight Retain has been called successfully.

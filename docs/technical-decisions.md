@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-This document records the foundational architectural decisions made in ContextRelay, explaining the technical context, evaluated alternatives, rationale, and consequences for each choice.
+This document records the foundational architectural decisions made in Viora, explaining the technical context, evaluated alternatives, rationale, and consequences for each choice.
 
 ---
 
@@ -27,7 +27,7 @@ This document records the foundational architectural decisions made in ContextRe
   2. *In-Memory JSON / File System:* Ephemeral storage with race condition vulnerabilities.
   3. *Embedded SQLite (`node:sqlite` DatabaseSync):* Zero-configuration, ACID-compliant, native single-file embedded database built into Node.js.
 - **Decision:** Use Node.js built-in `node:sqlite` (`DatabaseSync`) stored locally at `context_relay.sqlite`.
-- **Rationale:** ContextRelay is designed for single-agency deployment or edge instances. Native SQLite eliminates external database dependencies and C++ build toolchains, starts instantly, executes sub-millisecond queries, and provides rock-solid transaction guarantees.
+- **Rationale:** Viora is designed for single-agency deployment or edge instances. Native SQLite eliminates external database dependencies and C++ build toolchains, starts instantly, executes sub-millisecond queries, and provides rock-solid transaction guarantees.
 - **Consequences:** SQLite operates under single-writer locking with WAL enabled, which is completely sufficient for agency account teams but requires persistent disk mounting when running in containerized environments.
 
 ---

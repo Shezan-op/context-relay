@@ -4,13 +4,13 @@
 
 In traditional agency operations, client context is tied directly to the **individual human** managing the account. When the human departs, the connection breaks.
 
-ContextRelay introduces an architectural bridge that shifts institutional context from the employee's ephemeral memory into **durable client memory**.
+Viora introduces an architectural bridge that shifts institutional context from the employee's ephemeral memory into **durable client memory**.
 
 ```
 ACCOUNT MANAGER A (Elena)
           │
           ▼ [Client Conversations]
-    CONTEXTRELAY
+    VIORA
           │
           ▼ [Retain Durable Facts]
     HINDSIGHT MEMORY BANK
@@ -30,7 +30,7 @@ CONTINUED CLIENT RELATIONSHIP
 
 ## 2. The Four Knowledge States
 
-To prevent confusion between raw documents, AI models, and memories, ContextRelay enforces four strictly delineated knowledge states:
+To prevent confusion between raw documents, AI models, and memories, Viora enforces four strictly delineated knowledge states:
 
 ```
 [ 1. TRANSCRIPT ]
@@ -63,12 +63,12 @@ To prevent confusion between raw documents, AI models, and memories, ContextRela
 ### 3.1 Preserves Temporal Evolution
 Decisions change over time. In Month 1, a client may approve PostgreSQL. In Month 3, they may mandate TimescaleDB.
 - In a raw transcript folder, a new manager reading an old kickoff doc will assume PostgreSQL is current.
-- In ContextRelay's memory model, memories preserve temporal progression: the system recognizes that the Month 3 decision supersedes the Month 1 agreement while preserving the rationale for why the change occurred.
+- In Viora's memory model, memories preserve temporal progression: the system recognizes that the Month 3 decision supersedes the Month 1 agreement while preserving the rationale for why the change occurred.
 
 ### 3.2 Anchors Rejected Approaches
 The most dangerous mistake an incoming account manager can make is re-pitching something the client already evaluated and rejected.
 - Transcripts bury rejections across 50 pages of chatter.
-- ContextRelay's memory extraction isolates rejections as explicit negative constraints (e.g., *"Client rejected third-party tracking pixels due to HIPAA regulations"*).
+- Viora's memory extraction isolates rejections as explicit negative constraints (e.g., *"Client rejected third-party tracking pixels due to HIPAA regulations"*).
 
 ### 3.3 Guarantees Agency Auditability
 Because answers are strictly synthesized from retrieved evidence, agency leadership can always click the **Evidence Drawer** to verify exactly which meeting and which client executive established a policy.

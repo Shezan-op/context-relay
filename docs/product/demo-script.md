@@ -1,6 +1,6 @@
-# ContextRelay Product Demonstration Script
+# Viora Product Demonstration Script
 
-This script provides a narrative-driven, step-by-step walkthrough for demonstrating ContextRelay to technical leaders, agency directors, and operations executives.
+This script provides a narrative-driven, step-by-step walkthrough for demonstrating Viora to technical leaders, agency directors, and operations executives.
 
 ---
 
@@ -18,7 +18,7 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 > 
 > *The incoming manager inherits empty CRM fields and dozens of unorganized Zoom recordings. Inevitably, on their very first check-in call, they re-propose an idea the client rejected six months ago. The client gets frustrated, trust is damaged, and account retention plummets.*
 > 
-> *ContextRelay solves this. The core thesis is simple: **The person can leave. The client context should not.**"*
+> *Viora solves this. The core thesis is simple: **The person can leave. The client context should not.**"*
 
 ---
 
@@ -26,13 +26,13 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 **[Action: Navigate to `http://localhost:3000` and select 'Acme Health']**
 
-> *"Here is ContextRelay. Notice the minimalist, dark interface. We have selected our client workspace: Acme Health. Notice that Acme Health is assigned a dedicated, isolated Hindsight memory bank. Information stored here can never leak to any other client.*
+> *"Here is Viora. Notice the minimalist, dark interface. We have selected our client workspace: Acme Health. Notice that Acme Health is assigned a dedicated, isolated Hindsight memory bank. Information stored here can never leak to any other client.*
 > 
-> *Let's simulate what Elena did while managing this account. After each major meeting, she dropped the transcript into ContextRelay."*
+> *Let's simulate what Elena did while managing this account. After each major meeting, she dropped the transcript into Viora."*
 
 **[Action: Ingest `transcripts/meeting_1_kickoff_2026_01_15.txt` and `transcripts/meeting_2_tech_review_2026_03_12.txt`]**
 
-> *"Notice how fast this is. In under four seconds, ContextRelay parses the raw conversational text, validates the file, and transmits it to Hindsight's retain engine.*
+> *"Notice how fast this is. In under four seconds, Viora parses the raw conversational text, validates the file, and transmits it to Hindsight's retain engine.*
 > 
 > *Unlike naive search engines that just chunk text into arbitrary 500-word blocks, Hindsight extracts entities, technical decisions, stakeholder approval patterns, and temporal timestamps."*
 
@@ -42,7 +42,7 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 > *"Now, let's fast-forward eighteen months. Elena resigns. Marcus is hired and assigned to take over Acme Health on Monday morning. His first strategy call with CTO Sarah Martinez is on Tuesday.*
 > 
-> *Marcus doesn't have thirty hours to watch recordings. Instead, he opens ContextRelay."*
+> *Marcus doesn't have thirty hours to watch recordings. Instead, he opens Viora."*
 
 ---
 
@@ -50,7 +50,7 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 **[Action: Click the 'Account Handover Brief' tab in the UI and click 'Generate Handover Brief']**
 
-> *"Marcus clicks 'Account Handover Brief'. In seconds, ContextRelay executes multi-faceted recall queries across Hindsight and synthesizes an authoritative continuity dossier.*
+> *"Marcus clicks 'Account Handover Brief'. In seconds, Viora executes multi-faceted recall queries across Hindsight and synthesizes an authoritative continuity dossier.*
 > 
 > *Notice the breakdown:*
 > 1. *Current Technical & Business Decisions*
@@ -68,7 +68,7 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 > *"Now Marcus wants to verify the technical stack. In January, the kickoff transcript approved standard PostgreSQL. But in March, the client switched to TimescaleDB.*
 > 
-> *Let's see how ContextRelay handles this."*
+> *Let's see how Viora handles this."*
 
 **[Action: Submit query and show answer]**
 
@@ -92,7 +92,7 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 **[Action: Query: 'What is the client budget for the European office expansion?']**
 
-> *"What happens if Marcus asks something that was never discussed? A standard AI would guess. Watch ContextRelay."*
+> *"What happens if Marcus asks something that was never discussed? A standard AI would guess. Watch Viora."*
 
 **[Action: Submit query]**
 
@@ -104,4 +104,4 @@ This script provides a narrative-driven, step-by-step walkthrough for demonstrat
 
 > *"When Marcus steps into his Tuesday morning call with Sarah Martinez, he speaks with the authority of someone who has been on the account for two years. He doesn't repeat old mistakes. He doesn't ask basic questions.*
 > 
-> *ContextRelay turns perishable human experience into permanent agency equity. Thank you."*
+> *Viora turns perishable human experience into permanent agency equity. Thank you."*

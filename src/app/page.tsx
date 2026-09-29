@@ -172,7 +172,7 @@ function SkeletonRows({ count = 3 }: { count?: number }) {
   );
 }
 
-export default function ContextRelayApp() {
+export default function VioraApp() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
@@ -192,7 +192,7 @@ export default function ContextRelayApp() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       try {
-        return localStorage.getItem('contextrelay_sidebar_collapsed') === 'true';
+        return (localStorage.getItem('viora_sidebar_collapsed') || localStorage.getItem('contextrelay_sidebar_collapsed')) === 'true';
       } catch {
         return false;
       }
@@ -206,7 +206,7 @@ export default function ContextRelayApp() {
   const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('contextrelay_pinned_clients');
+        const saved = localStorage.getItem('viora_pinned_clients') || localStorage.getItem('contextrelay_pinned_clients');
         return saved ? JSON.parse(saved) : [];
       } catch {
         return [];
@@ -305,7 +305,7 @@ export default function ContextRelayApp() {
     setIsSidebarCollapsed((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('contextrelay_sidebar_collapsed', String(next));
+        localStorage.setItem('viora_sidebar_collapsed', String(next));
       } catch {}
       return next;
     });
@@ -316,7 +316,7 @@ export default function ContextRelayApp() {
     setPinnedIds((prev) => {
       const next = prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId];
       try {
-        localStorage.setItem('contextrelay_pinned_clients', JSON.stringify(next));
+        localStorage.setItem('viora_pinned_clients', JSON.stringify(next));
       } catch {}
       return next;
     });
@@ -397,7 +397,7 @@ export default function ContextRelayApp() {
       setPinnedIds((prev) => {
         const next = prev.filter((id) => id !== clientToDelete.id);
         try {
-          localStorage.setItem('contextrelay_pinned_clients', JSON.stringify(next));
+          localStorage.setItem('viora_pinned_clients', JSON.stringify(next));
         } catch {}
         return next;
       });
@@ -584,10 +584,10 @@ export default function ContextRelayApp() {
       <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand-header">
           <div className="brand-title-wrap">
-            <div className="brand-logo-icon">CR</div>
+            <div className="brand-logo-icon">V</div>
             {!isSidebarCollapsed && (
               <div>
-                <div className="brand-title-text">ContextRelay</div>
+                <div className="brand-title-text">Viora</div>
                 <div className="brand-tagline">Client context that survives the person.</div>
               </div>
             )}
@@ -1829,11 +1829,11 @@ export default function ContextRelayApp() {
         ) : (
           <div className="empty-state" style={{ maxWidth: '560px', margin: '60px auto' }}>
             <div className="brand-logo-icon" style={{ width: '48px', height: '48px', fontSize: '18px', margin: '0 auto 16px' }}>
-              CR
+              V
             </div>
             <h2 className="empty-state-title" style={{ fontSize: '20px' }}>Select or register a client account</h2>
             <p className="empty-state-desc">
-              ContextRelay maintains durable client institutional memory across account manager transitions.
+              Viora maintains durable client institutional memory across account manager transitions.
             </p>
             <button
               type="button"
@@ -1909,7 +1909,7 @@ export default function ContextRelayApp() {
           <div className="modal-content">
             <h3 className="modal-title">Delete client workspace</h3>
             <p className="modal-desc">
-              This will remove <strong>{clientToDelete.name}</strong> from ContextRelay. Any associated local source records will also be removed.
+              This will remove <strong>{clientToDelete.name}</strong> from Viora. Any associated local source records will also be removed.
             </p>
             <div className="modal-actions">
               <button

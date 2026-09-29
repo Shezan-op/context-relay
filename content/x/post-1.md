@@ -2,7 +2,7 @@ When an agency account manager resigns, years of context walk out the door: what
 
 The new person repeats old mistakes.
 
-We built ContextRelay to fix this:
+We built Viora to fix this:
 - Client-isolated long-term memory via Hindsight
 - Temporal awareness (tracks when decisions evolve)
 - Strictly grounded answers with verifiable quotes & timestamps

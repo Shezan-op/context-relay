@@ -1,9 +1,9 @@
-# PROJECT CLARITY: CONTEXTRELAY
+# PROJECT CLARITY: VIORA
 
 ## 1. PRODUCT IN ONE SENTENCE
 
 ### 1. What exactly is this product?
-ContextRelay is a single-workspace agency client-memory web application that transforms real client meeting transcripts into durable, client-isolated institutional memory using Hindsight, and later retrieves that memory to answer account questions with visible evidence for incoming or current team members.
+Viora is a single-workspace agency client-memory web application that transforms real client meeting transcripts into durable, client-isolated institutional memory using Hindsight, and later retrieves that memory to answer account questions with visible evidence for incoming or current team members.
 
 ### 2. What single problem does it solve?
 It solves the loss of vital client-specific context, decisions, preferences, and constraints when agency account ownership transfers or when team members rotate off an account.
@@ -15,7 +15,7 @@ Agency account managers, project managers, creative directors, and engineering l
 It is a digital brain for a company's client: you give it meeting notes, and whenever you ask what the client likes, hates, or decided, it remembers and shows you the exact words they said.
 
 ### 5. What does the user do BEFORE using the product?
-The user attends a client meeting, receives or exports a plain text or markdown transcript of the conversation (from Zoom, Teams, Google Meet, Whisper, or Otter), and opens ContextRelay.
+The user attends a client meeting, receives or exports a plain text or markdown transcript of the conversation (from Zoom, Teams, Google Meet, Whisper, or Otter), and opens Viora.
 
 ### 6. What does the user do AFTER using the product?
 The user reads the grounded answer and its cited evidence to brief team members, prepare proposals, avoid rejected approaches, and take confident client actions without bothering the client with repetitive questions.
@@ -31,7 +31,7 @@ If it hallucinated client preferences, mixed up memory between different clients
 ## 2. THE REAL USER FLOW
 
 ### 9. What is the very first thing the user does?
-The user opens ContextRelay in a web browser and sees the clean dashboard displaying existing clients or an empty state inviting them to create their first client.
+The user opens Viora in a web browser and sees the clean dashboard displaying existing clients or an empty state inviting them to create their first client.
 
 ### 10. What is the first piece of information entering the system?
 A client name string (e.g., "Acme Corporation").
@@ -70,7 +70,7 @@ Immediately upon successful completion of the Hindsight Retain operation for tha
 The user navigates to the client workspace, types a natural-language question into the query box, and submits it.
 
 ### 22. Who retrieves it?
-The ContextRelay server calls the Hindsight API's Recall endpoint targeting that client's isolated bank ID.
+The Viora server calls the Hindsight API's Recall endpoint targeting that client's isolated bank ID.
 
 ### 23. What does the system do with retrieved information?
 The server verifies that relevant evidence exists; if found, it formats the retrieved facts and source chunks into a grounded context prompt for the application LLM to synthesize a concise answer. If no evidence is found, it bypasses the LLM and returns a "No stored memory found" state.
@@ -132,7 +132,7 @@ In the MVP, this human input represents the minimal essential boundary. Client c
 ### 38. What exactly does the LLM do?
 Two separate LLM roles exist:
 1. **Hindsight LLM (Internal to Hindsight server):** Analyzes transcript chunks during Retain to extract structured facts, entities, and temporal attributes according to the retain mission.
-2. **ContextRelay Application LLM:** Receives the user question and the retrieved Hindsight memories/chunks, and synthesizes a direct, truthful answer with evidence citations.
+2. **Viora Application LLM:** Receives the user question and the retrieved Hindsight memories/chunks, and synthesizes a direct, truthful answer with evidence citations.
 
 ### 39. What does the LLM NOT do?
 The application LLM does NOT extract memories from raw files, does NOT write to Hindsight, does NOT select bank IDs, does NOT invent missing information, does NOT perform search, and does NOT retain conversations.
@@ -536,7 +536,7 @@ None. The architecture is strictly scoped to the immediate MVP.
 Yes, the 5-stage ASCII diagram above fully explains the entire system architecture.
 
 ### 131. Can the entire MVP be explained in under 2 minutes?
-Yes: "ContextRelay turns client meeting transcripts into durable institutional memory. When you upload a transcript, Hindsight extracts business facts into a private bank for that client. When an account manager asks a question, Hindsight recalls the relevant facts, and our LLM answers with direct quotes and evidence."
+Yes: "Viora turns client meeting transcripts into durable institutional memory. When you upload a transcript, Hindsight extracts business facts into a private bank for that client. When an account manager asks a question, Hindsight recalls the relevant facts, and our LLM answers with direct quotes and evidence."
 
 ### 132. If not, simplify it.
 Already maximally simplified.
@@ -620,7 +620,7 @@ An immediate, evidence-grounded answer that prevents an agency team member from 
 ## 16. DEMO TEST
 
 ### 151. Show exactly what happens during a 5-minute demo.
-1. Start with an empty ContextRelay instance (0 clients, 0 memories).
+1. Start with an empty Viora instance (0 clients, 0 memories).
 2. Create client "Apex Logistics".
 3. Upload real meeting transcript 1 (`apex_kickoff.txt`).
 4. Show ingestion status update to "Stored".
@@ -656,14 +656,14 @@ Both the initial requirements from Transcript 1 and the revised decisions from T
 It synthesizes that the client pivoted or refined their requirement, providing the new policy and citing the historical change.
 
 ### 160. Why would a judge understand the value immediately?
-Because every agency has lost a major client or wasted billable hours due to lost context during staff turnover; ContextRelay visibly solves that exact pain in under 60 seconds with clear proof.
+Because every agency has lost a major client or wasted billable hours due to lost context during staff turnover; Viora visibly solves that exact pain in under 60 seconds with clear proof.
 
 ---
 
 ## 17. FINAL SIMPLICITY CHECK
 
 ### Product
-ContextRelay is a single-workspace agency client-memory web application that turns real meeting transcripts into durable institutional memory using Hindsight to answer account questions.
+Viora is a single-workspace agency client-memory web application that turns real meeting transcripts into durable institutional memory using Hindsight to answer account questions.
 
 ### User
 Agency account managers, project managers, and leads managing client relationships across team transitions.
@@ -727,4 +727,4 @@ OUTPUT + EVIDENCE (Render in UI)
 
 ### Core Value Question
 **“If I removed everything except the core value, what would remain?”**
-Uploading a client meeting transcript, storing durable client memory in Hindsight, and asking a question to get an evidence-backed answer. That is the exact ContextRelay MVP.
+Uploading a client meeting transcript, storing durable client memory in Hindsight, and asking a question to get an evidence-backed answer. That is the exact Viora MVP.

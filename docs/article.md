@@ -24,15 +24,15 @@ Expecting an incoming team member to read through forty past transcripts before 
 
 To solve account continuity, an agency needs a system that transforms conversations into structured, durable client memory—separating permanent institutional decisions from temporary conversational noise, preserving chronological shifts, and retrieving evidence when questions arise.
 
-That is what ContextRelay does.
+That is what Viora does.
 
 ---
 
-## How ContextRelay Preserves Client Context
+## How Viora Preserves Client Context
 
-ContextRelay is built around a single premise: an agency should not lose client knowledge when a human leaves the account.
+Viora is built around a single premise: an agency should not lose client knowledge when a human leaves the account.
 
-The system acts as a durable client memory layer for agency workspaces. When meeting transcripts are uploaded, ContextRelay automatically extracts institutional business knowledge into an isolated memory bank dedicated to that client.
+The system acts as a durable client memory layer for agency workspaces. When meeting transcripts are uploaded, Viora automatically extracts institutional business knowledge into an isolated memory bank dedicated to that client.
 
 Crucially, the human account manager does not have to manually manage memory. They do not have to highlight text, tag categories, or command the system with "remember that Sarah approves budgets." The source transcript itself is the input.
 
@@ -43,13 +43,13 @@ When an incoming account manager takes over the account, they do not have to gue
 - *"What brand design rules and visual restrictions were established?"*
 - *"Did the portal launch timeline change across meetings?"*
 
-ContextRelay recalls the relevant client memory, provides verifiable source evidence, and synthesizes a direct, grounded answer.
+Viora recalls the relevant client memory, provides verifiable source evidence, and synthesizes a direct, grounded answer.
 
 ---
 
 ## The Architecture: Hindsight as the Memory Layer
 
-To build true institutional continuity, ContextRelay does not treat memory as a simple vector database lookup. It relies on Hindsight as its dedicated memory infrastructure.
+To build true institutional continuity, Viora does not treat memory as a simple vector database lookup. It relies on Hindsight as its dedicated memory infrastructure.
 
 ```
 Client Meeting Transcript (.txt / .md)
@@ -88,7 +88,7 @@ User Interface: Answer + Verifiable Evidence Drawer
 ```
 
 ### Isolated Client Banks
-Agency client data must never leak across account boundaries. When a client is created in ContextRelay, the server provisions a dedicated Hindsight bank keyed by a stable UUID (`client:<uuid>`). Queries executed within Client A's workspace have no architectural access to Client B's memories.
+Agency client data must never leak across account boundaries. When a client is created in Viora, the server provisions a dedicated Hindsight bank keyed by a stable UUID (`client:<uuid>`). Queries executed within Client A's workspace have no architectural access to Client B's memories.
 
 ### Mission-Driven Fact Extraction
 Hindsight's retain engine operates under a rigorous client-memory mission. It prioritizes explicit client preferences, approvals, rejections, constraints, stakeholder sign-offs, and commitments, while explicitly ignoring greetings, filler, transient scheduling chatter, and credentials. It extracts atomic statements categorized into types:
@@ -103,7 +103,7 @@ Rather than overwriting history, Hindsight retains both statements as distinct f
 > *"The client originally targeted a May 15, 2026 launch in the January 15 kickoff meeting. However, during the March 20 review, the launch date was officially rescheduled to June 30, 2026 to accommodate an executive audit window."*
 
 ### Zero Memory Pollution
-When an account manager queries ContextRelay, the query and answer are strictly ephemeral. ContextRelay never retains user lookups into Hindsight. This ensures that transient questions or hypothetical inquiries never contaminate the client's permanent institutional knowledge base.
+When an account manager queries Viora, the query and answer are strictly ephemeral. Viora never retains user lookups into Hindsight. This ensures that transient questions or hypothetical inquiries never contaminate the client's permanent institutional knowledge base.
 
 ---
 
@@ -111,20 +111,20 @@ When an account manager queries ContextRelay, the query and answer are strictly 
 
 Consider Meridian Logistics, an enterprise logistics provider undergoing a major digital portal redesign:
 
-### Before ContextRelay
+### Before Viora
 1. **Year 1:** Account Director Jordan Lee spends months establishing technical constraints with Meridian's leadership. The client mandates AWS Aurora Serverless v2 PostgreSQL, strictly rejects MongoDB due to enterprise audit compliance, specifies a Deep Navy brand palette forbidding pure-black or neon accents, and designates VP of Technology Marcus Vance as the sole signer for budgets over $10,000.
 2. **Transition:** Jordan accepts an executive role at another firm and departs the agency.
 3. **The Trap:** Incoming Account Manager Taylor Cole takes over the account. Taylor prepares a sprint review proposal suggesting MongoDB for the vehicle telemetry feed, includes a modern neon-accented dark UI mockup, and submits a $7,500 creative scope invoice directly to the VP.
 4. **The Friction:** The client is frustrated. *"We explicitly rejected MongoDB four months ago. We told Jordan no neon accents. And why is Marcus being asked to approve a creative invoice when Elena has sign-off authority?"* The client relationship starts with friction and loss of trust.
 
-### After ContextRelay
+### After Viora
 1. **Retention:** Both the January kickoff transcript and the March architecture review transcript were ingested into Meridian's isolated memory bank.
 2. **Transition:** Jordan departs. Taylor inherits the account.
 3. **Query:** Before drafting the proposal, Taylor opens Meridian's workspace and asks:
    - *"What database technologies did the client reject or mandate?"*
-   - ContextRelay recalls: *"Client approved PostgreSQL on AWS Aurora Serverless v2 and strictly rejected MongoDB due to audit compliance mandates. On March 20, TimescaleDB was approved as a PostgreSQL extension for vehicle telemetry."*
+   - Viora recalls: *"Client approved PostgreSQL on AWS Aurora Serverless v2 and strictly rejected MongoDB due to audit compliance mandates. On March 20, TimescaleDB was approved as a PostgreSQL extension for vehicle telemetry."*
    - Taylor asks: *"Who has approval authority for creative scope adjustments?"*
-   - ContextRelay recalls: *"Elena Rostova was officially delegated sign-off authority for creative sprint deliverables and design assets up to $5,000 on March 20, while Marcus Vance retains sign-off for alterations exceeding $10,000."*
+   - Viora recalls: *"Elena Rostova was officially delegated sign-off authority for creative sprint deliverables and design assets up to $5,000 on March 20, while Marcus Vance retains sign-off for alterations exceeding $10,000."*
 4. **Evidence:** Beneath each answer, Taylor clicks to expand the exact transcript excerpt with timestamps and attendee names.
 5. **The Outcome:** Taylor sends the invoice to Elena, specifies TimescaleDB on PostgreSQL, presents the Deep Navy palette, and continues the account with the confidence of someone who has been there for two years.
 
@@ -132,9 +132,9 @@ Consider Meridian Logistics, an enterprise logistics provider undergoing a major
 
 ## An Honest Architectural Limitation
 
-ContextRelay is engineered to solve account amnesia with precision, which means it deliberately rejects scope creep:
+Viora is engineered to solve account amnesia with precision, which means it deliberately rejects scope creep:
 - It does not listen to live microphones or inject automated recording bots into Zoom calls. It requires plain text or markdown transcripts.
 - It does not attempt to be a general-purpose project management suite, CRM, or billing platform.
-- It will not guess or invent client context. If a meeting transcript does not state who approved a decision, ContextRelay reports that the information is absent from client memory rather than hallucinating an answer.
+- It will not guess or invent client context. If a meeting transcript does not state who approved a decision, Viora reports that the information is absent from client memory rather than hallucinating an answer.
 
 Institutional continuity is not about flashy chatbots. It is about preserving the hard-won decisions, preferences, and human nuances that make client partnerships work.

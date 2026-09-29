@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ContextRelay — The Account Handover Story & Interactive Pipeline</title>
+  <title>Viora — The Account Handover Story & Interactive Pipeline</title>
   <style>
     :root {
       --bg-canvas: #0c0d0e;
@@ -347,13 +347,13 @@
     <div class="brand">
       <div class="brand-logo">CR</div>
       <div>
-        <div class="brand-title">ContextRelay Interactive Pipeline</div>
+        <div class="brand-title">Viora Interactive Pipeline</div>
         <div class="brand-subtitle">Agency-Client Institutional Continuity Engine</div>
       </div>
     </div>
     <div class="mode-toggle">
-      <button id="mode-with" class="mode-btn active" onclick="setMode('with')">With ContextRelay</button>
-      <button id="mode-without" class="mode-btn" onclick="setMode('without')">Without ContextRelay</button>
+      <button id="mode-with" class="mode-btn active" onclick="setMode('with')">With Viora</button>
+      <button id="mode-without" class="mode-btn" onclick="setMode('without')">Without Viora</button>
     </div>
   </header>
 
@@ -390,7 +390,7 @@
             <text x="38" y="41" fill="#8e9099" font-size="9.5" font-family="sans-serif">meeting_01.txt</text>
           </g>
 
-          <!-- 3. ContextRelay Ingestion Server -->
+          <!-- 3. Viora Ingestion Server -->
           <g id="node-server" transform="translate(340, 40)">
             <rect width="120" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
             <text x="14" y="26" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">Next.js Server</text>
@@ -463,7 +463,7 @@
           <div class="panel-label">Pipeline Event</div>
           <div class="panel-headline" id="eventHeadline">Jordan uploads kickoff transcript</div>
           <div class="panel-body" id="eventDescription">
-            Account Director Jordan finishes the architecture kickoff with Meridian Logistics. Jordan receives the meeting transcript and uploads it into ContextRelay. Jordan does not have to manually tag facts or type "remember this".
+            Account Director Jordan finishes the architecture kickoff with Meridian Logistics. Jordan receives the meeting transcript and uploads it into Viora. Jordan does not have to manually tag facts or type "remember this".
           </div>
           
           <div class="contrast-box" id="contrastBox">
@@ -495,7 +495,7 @@
         actor: "Account Manager A (Jordan)",
         headline: "Real Meeting Transcript Enters the Pipeline",
         description: "Jordan uploads 'meeting_1_kickoff_2026_01_15.txt' containing Meridian Logistics' architectural kickoff. Jordan does not manually highlight facts or type 'remember this'. The source transcript itself is the complete input.",
-        contrastWith: "The raw transcript is captured directly into ContextRelay immediately after the meeting.",
+        contrastWith: "The raw transcript is captured directly into Viora immediately after the meeting.",
         contrastWithout: "Notes remain scattered across Jordan's desktop and Zoom recordings. Only Jordan knows what happened.",
         inspect: {
           step: 1,
@@ -608,8 +608,8 @@
         phase: "Step 7 of 13: The Handover Gap",
         actor: "Agency Operations",
         headline: "Account Manager A Leaves the Agency",
-        description: "Jordan Lee accepts an external position and departs the agency. The institutional memory inside Jordan's head leaves. But in ContextRelay, every client decision, preference, and rejection remains permanently preserved.",
-        contrastWith: "The human walks out the door, but the client memory stays in ContextRelay.",
+        description: "Jordan Lee accepts an external position and departs the agency. The institutional memory inside Jordan's head leaves. But in Viora, every client decision, preference, and rejection remains permanently preserved.",
+        contrastWith: "The human walks out the door, but the client memory stays in Viora.",
         contrastWithout: "CRITICAL FAILURE: Years of context disappear from the agency. Discovery restarts from scratch.",
         inspect: {
           step: 7,
@@ -625,8 +625,8 @@
         phase: "Step 8 of 13: Incoming Query",
         actor: "Account Manager B (Taylor)",
         headline: "Taylor Takes Over and Queries Client Memory",
-        description: "Incoming Account Manager Taylor inherits Meridian Logistics. Before submitting a proposal, Taylor asks ContextRelay: 'What database technologies did the client reject or mandate?'",
-        contrastWith: "Taylor asks ContextRelay instead of bothering the client or guessing.",
+        description: "Incoming Account Manager Taylor inherits Meridian Logistics. Before submitting a proposal, Taylor asks Viora: 'What database technologies did the client reject or mandate?'",
+        contrastWith: "Taylor asks Viora instead of bothering the client or guessing.",
         contrastWithout: "Taylor has no idea MongoDB was rejected and plans to propose it to speed up development.",
         inspect: {
           step: 8,
@@ -656,7 +656,7 @@
       },
       {
         phase: "Step 10 of 13: Evidence Assembly",
-        actor: "ContextRelay Retrieval Service",
+        actor: "Viora Retrieval Service",
         headline: "Evidence Assembled with Source Provenance and Quotes",
         description: "The server maps recalled facts to their source document and transcript chunks. It extracts the exact quote from Marcus Vance: 'Our enterprise compliance team strictly rejected MongoDB due to audit requirements. PostgreSQL is non-negotiable.'",
         contrastWith: "Every statement carries verifiable provenance back to the exact meeting and date.",
@@ -691,7 +691,7 @@
       },
       {
         phase: "Step 12 of 13: Grounded Answer Delivery",
-        actor: "ContextRelay UI",
+        actor: "Viora UI",
         headline: "Answer and Evidence Delivered to Incoming Account Manager",
         description: "Taylor receives the answer: 'The client mandated PostgreSQL on AWS Aurora Serverless v2 in us-east-1 and strictly rejected MongoDB due to enterprise compliance audit requirements.' The Evidence Drawer shows the date and verbatim quote.",
         contrastWith: "Taylor understands the history in 5 seconds with verifiable quotes.",
@@ -807,11 +807,11 @@
 
       if (currentMode === 'with') {
         contrastBox.className = "contrast-box with-relay";
-        contrastTitle.textContent = "With ContextRelay: Institutional Continuity";
+        contrastTitle.textContent = "With Viora: Institutional Continuity";
         contrastContent.textContent = data.contrastWith;
       } else {
         contrastBox.className = "contrast-box without-relay";
-        contrastTitle.textContent = "Without ContextRelay: Knowledge Loss Trap";
+        contrastTitle.textContent = "Without Viora: Knowledge Loss Trap";
         contrastContent.textContent = data.contrastWithout;
       }
 

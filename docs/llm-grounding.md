@@ -1,12 +1,12 @@
 # LLM Grounding & Synthesis Boundary
 
-This document specifies the exact role, prompting architecture, anti-hallucination controls, and provider configurations of the Application LLM layer in ContextRelay.
+This document specifies the exact role, prompting architecture, anti-hallucination controls, and provider configurations of the Application LLM layer in Viora.
 
 ---
 
 ## 1. The Fundamental Architecture Boundary
 
-To understand ContextRelay, one must understand what the LLM is and what it is not:
+To understand Viora, one must understand what the LLM is and what it is not:
 
 > **Hindsight is NOT the final answer generator.**  
 > It does not write polished paragraphs or format conversational summaries for the user. It is the long-term memory engine that extracts, indexes, links, and recalls structured client evidence.
@@ -24,14 +24,14 @@ To understand ContextRelay, one must understand what the LLM is and what it is n
 Defined in [`src/lib/llm.ts`](file:///c:/Users/techt/context-relay/src/lib/llm.ts):
 
 ```
-You answer questions about a specific client account using only the memory evidence supplied by ContextRelay. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.
+You answer questions about a specific client account using only the memory evidence supplied by Viora. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.
 ```
 
 ---
 
 ## 3. Evidence Formatting & Context Window Efficiency
 
-Rather than dumping full transcripts or arbitrary chunks into the prompt, ContextRelay formats the top evidence items (up to 8 for queries, up to 15 for handoff briefs) into structured evidence blocks:
+Rather than dumping full transcripts or arbitrary chunks into the prompt, Viora formats the top evidence items (up to 8 for queries, up to 15 for handoff briefs) into structured evidence blocks:
 
 ```
 CLIENT EVIDENCE FROM HINDSIGHT:
@@ -61,12 +61,12 @@ Keep your answer clear, authoritative, and direct.
 
 ## 4. Grounding & Anti-Hallucination Controls
 
-ContextRelay enforces four layers of hallucination prevention:
+Viora enforces four layers of hallucination prevention:
 
 1. **Short-Circuit on Zero Memory:**  
    If Hindsight returns 0 memories, the LLM is never invoked. The server immediately returns `"No relevant stored client memory found regarding your question."`
 2. **Explicit Evidence Confinement:**  
-   The system prompt explicitly commands: *"answer questions about a specific client account using only the memory evidence supplied by ContextRelay. Do not invent facts."*
+   The system prompt explicitly commands: *"answer questions about a specific client account using only the memory evidence supplied by Viora. Do not invent facts."*
 3. **Temporal Conflict Reconciliation:**  
    When evidence reflects conflicting decisions across different dates (e.g., launch date on Jan 15 vs. March 20), the LLM is instructed: *"identify the conflict and prefer the newest explicit statement when dates are available."*
 4. **Low Sampling Temperature:**  
@@ -76,7 +76,7 @@ ContextRelay enforces four layers of hallucination prevention:
 
 ## 5. Supported LLM Providers
 
-ContextRelay is provider-agnostic. The provider is selected via the `LLM_PROVIDER` environment variable in `.env.local`:
+Viora is provider-agnostic. The provider is selected via the `LLM_PROVIDER` environment variable in `.env.local`:
 
 | Provider | `LLM_PROVIDER` | Default Model | Configuration Env Var |
 |---|---|---|---|

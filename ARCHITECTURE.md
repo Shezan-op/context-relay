@@ -1,10 +1,10 @@
-# ContextRelay Architecture
+# Viora Architecture
 
 **Durable Client Memory for Agency Account Continuity**
 
-ContextRelay preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
+Viora preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
 
-This document describes the technical architecture of ContextRelay, detailing data flow boundaries, storage contracts, Hindsight memory infrastructure, and LLM grounding constraints.
+This document describes the technical architecture of Viora, detailing data flow boundaries, storage contracts, Hindsight memory infrastructure, and LLM grounding constraints.
 
 ---
 
@@ -101,7 +101,7 @@ This document describes the technical architecture of ContextRelay, detailing da
 - **No Redis / Memcached / Caches:** Premature optimization; queries are routed directly to Hindsight.
 - **No Message Queues / Event Buses (Kafka, RabbitMQ, BullMQ):** Synchronous, predictable request-response cycles keep the architecture understandable and easy to debug.
 - **No Heavy Frameworks (LangChain, LlamaIndex):** Replaced with clean, typed, deterministic functions.
-- **No Multi-Agent Frameworks (CrewAI, AutoGen, Agent Swarms):** ContextRelay has one clear agentic behavior: client context retrieval and grounded answering.
+- **No Multi-Agent Frameworks (CrewAI, AutoGen, Agent Swarms):** Viora has one clear agentic behavior: client context retrieval and grounded answering.
 - **No Audio Recording or Transcription Bots:** Transcripts are generated externally and ingested as `.txt` or `.md`.
 - **No Authentication / Multi-Tenant Billing:** Scoped as a single agency workspace.
 - **No Synthetic Demo Data / Fake Seed Records:** The app starts completely empty.
@@ -205,7 +205,7 @@ SQLite acts as the **operational metadata store**:
 
 ## 11. Memory Isolation Strategy
 
-- Each client account in ContextRelay is provisioned with a dedicated, isolated Hindsight bank (`client:<uuid>`).
+- Each client account in Viora is provisioned with a dedicated, isolated Hindsight bank (`client:<uuid>`).
 - Hindsight provides strict multi-bank isolation: memory searches in bank A cannot view, traverse, or retrieve facts from bank B.
 - The client bank ID is generated server-side and stored in SQLite. The browser only submits the `clientId`; the server securely resolves the corresponding `hindsight_bank_id`. Users cannot manipulate or forge bank IDs from the client.
 

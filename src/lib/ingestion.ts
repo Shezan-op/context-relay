@@ -42,7 +42,7 @@ export async function ingestTranscript(
   const filename = (fileInput.filename || '').trim();
   const lowerName = filename.toLowerCase();
   if (!lowerName.endsWith('.txt') && !lowerName.endsWith('.md')) {
-    throw new Error('Invalid file type. ContextRelay only accepts .txt and .md transcript files.');
+    throw new Error('Invalid file type. Viora only accepts .txt and .md transcript files.');
   }
 
   // 3. Validate content is non-empty

@@ -1,4 +1,4 @@
-# ContextRelay Scenarios: Three Stories of Client Continuity
+# Viora Scenarios: Three Stories of Client Continuity
 
 ---
 
@@ -7,7 +7,7 @@
 ### 1. What Happened
 Jordan Lee served as the lead Account Director for Meridian Logistics for nine months. During the kickoff meeting on January 15, 2026, Meridian's VP of Technology, Marcus Vance, laid out strict architectural rules: all infrastructure must run on AWS Aurora PostgreSQL in `us-east-1`, and MongoDB was strictly forbidden due to enterprise compliance audit failures. In July, Jordan departed the agency to join a tech startup. Incoming Account Manager Taylor Cole inherited Meridian Logistics with zero personal knowledge of Jordan's early conversations.
 
-### 2. What Entered ContextRelay
+### 2. What Entered Viora
 The raw text transcript of the kickoff meeting: `meeting_1_kickoff_2026_01_15.txt`.
 
 ### 3. What Hindsight Retained
@@ -17,7 +17,7 @@ The raw text transcript of the kickoff meeting: `meeting_1_kickoff_2026_01_15.tx
 - **Source Chunks:** Verbatim conversation quotes from Marcus Vance and Jordan Lee.
 
 ### 4. What the New Person Asked
-Taylor Cole asked ContextRelay:  
+Taylor Cole asked Viora:  
 *"What database technologies did the client reject or mandate for their enterprise portal?"*
 
 ### 5. What Hindsight Recalled
@@ -32,7 +32,7 @@ Hindsight executed multi-strategy recall on Meridian's isolated memory bank (`cl
 *"The client mandated PostgreSQL deployed on AWS Aurora Serverless v2 in the us-east-1 region. They explicitly and strictly rejected MongoDB due to enterprise compliance audit requirements."*
 
 ### 8. Why This Prevented Knowledge Loss
-Taylor's engineering lead had suggested proposing MongoDB for rapid prototyping. Because Taylor queried ContextRelay before the steering meeting, Taylor shut down the MongoDB proposal internally and presented Aurora PostgreSQL. The client saw a seamless transition with zero repeated mistakes.
+Taylor's engineering lead had suggested proposing MongoDB for rapid prototyping. Because Taylor queried Viora before the steering meeting, Taylor shut down the MongoDB proposal internally and presented Aurora PostgreSQL. The client saw a seamless transition with zero repeated mistakes.
 
 ---
 
@@ -41,7 +41,7 @@ Taylor's engineering lead had suggested proposing MongoDB for rapid prototyping.
 ### 1. What Happened
 During the January kickoff, Meridian established an aggressive portal launch deadline: May 15, 2026. Two months later, during the March 20 midpoint review, Product Director Elena Rostova announced that executive compliance audit windows had shifted, officially moving the launch deadline to June 30, 2026 to allow six additional weeks for end-to-end load testing. When a new project manager joined the team in April, agency files contained contradictory notes: older briefs referenced May 15, while newer email threads mentioned June.
 
-### 2. What Entered ContextRelay
+### 2. What Entered Viora
 Two meeting transcripts:
 1. `meeting_1_kickoff_2026_01_15.txt`
 2. `meeting_2_midpoint_review_2026_03_20.txt`
@@ -75,7 +75,7 @@ Instead of forcing the design and engineering teams into an emergency, unneeded 
 ### 1. What Happened
 A new creative director and account manager needed to invoice $4,200 for an unanticipated set of custom micro-interaction icons and UI illustrations. In the agency's initial kickoff, VP of Technology Marcus Vance stated that he held sole budget authority. However, in the March review, Marcus delegated sprint design adjustments up to $5,000 directly to Product Director Elena Rostova to prevent project bottlenecks. Without this context, the new account manager was about to send the invoice and approval request directly to the VP, who was traveling overseas.
 
-### 2. What Entered ContextRelay
+### 2. What Entered Viora
 Two meeting transcripts:
 1. `meeting_1_kickoff_2026_01_15.txt`
 2. `meeting_2_midpoint_review_2026_03_20.txt`

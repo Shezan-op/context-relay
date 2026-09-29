@@ -1,6 +1,6 @@
 # Client Memory Isolation Specification
 
-This document explains how ContextRelay prevents cross-client data contamination, detailing bank identifier resolution, storage boundaries, query routing, and automated isolation verification.
+This document explains how Viora prevents cross-client data contamination, detailing bank identifier resolution, storage boundaries, query routing, and automated isolation verification.
 
 ---
 
@@ -10,13 +10,13 @@ Agencies manage accounts for multiple clients, frequently in competing industrie
 
 Many basic AI implementations store all documents in a single shared vector database index with metadata filters (`where client = 'client_a'`). A minor coding mistake, unhandled null parameter, or injection vulnerability in metadata filters can instantly cause cross-tenant memory leakage.
 
-ContextRelay rejects shared vector spaces in favor of **hard, physical memory bank isolation**.
+Viora rejects shared vector spaces in favor of **hard, physical memory bank isolation**.
 
 ---
 
 ## 2. Bank Identifier Generation & Storage
 
-When a new client is provisioned in ContextRelay:
+When a new client is provisioned in Viora:
 
 ```typescript
 // src/app/api/clients/route.ts
@@ -71,7 +71,7 @@ Hindsight guarantees that searches executed on `client:<uuid_A>` have zero mathe
 
 ## 4. Automated Proof of Client Isolation
 
-ContextRelay includes automated regression tests in [`tests/core-pipeline.test.ts`](file:///c:/Users/techt/context-relay/tests/core-pipeline.test.ts) (Test Category 5) and [`tests/acceptance-e2e.test.ts`](file:///c:/Users/techt/context-relay/tests/acceptance-e2e.test.ts) (Step K) proving isolation:
+Viora includes automated regression tests in [`tests/core-pipeline.test.ts`](file:///c:/Users/techt/context-relay/tests/core-pipeline.test.ts) (Test Category 5) and [`tests/acceptance-e2e.test.ts`](file:///c:/Users/techt/context-relay/tests/acceptance-e2e.test.ts) (Step K) proving isolation:
 
 ### Test Category 5 from Core Pipeline:
 ```typescript

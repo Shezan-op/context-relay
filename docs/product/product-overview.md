@@ -1,8 +1,8 @@
-# ContextRelay Product Overview
+# Viora Product Overview
 
 **The Person Can Leave. The Client Context Should Not.**
 
-ContextRelay is an institutional memory and client continuity platform built specifically for professional service agencies, consultancies, and account teams. It eliminates agency-client knowledge loss when account managers depart by retaining every client decision, preference, constraint, and rejection in durable long-term memory.
+Viora is an institutional memory and client continuity platform built specifically for professional service agencies, consultancies, and account teams. It eliminates agency-client knowledge loss when account managers depart by retaining every client decision, preference, constraint, and rejection in durable long-term memory.
 
 ---
 
@@ -27,7 +27,7 @@ When that account manager resigns, this context walks out the door. The incoming
 
 ## 2. The Solution: Institutional Memory for Client Continuity
 
-ContextRelay acts as a permanent, client-isolated memory relay. Instead of letting conversational knowledge evaporate into raw transcript archives, ContextRelay extracts durable facts, decisions, and preferences, anchoring them into long-term memory.
+Viora acts as a permanent, client-isolated memory relay. Instead of letting conversational knowledge evaporate into raw transcript archives, Viora extracts durable facts, decisions, and preferences, anchoring them into long-term memory.
 
 When Account Manager B takes over the account, they do not start from scratch. They can:
 - Query historical client decisions and receive grounded, citation-backed answers.

@@ -1,12 +1,12 @@
 # Testing Strategy & Automated Proofs
 
-This document details the automated test suite in ContextRelay, explaining how tests are structured, what each test category verifies, and how the test pipeline proves client continuity without relying on fake seed data.
+This document details the automated test suite in Viora, explaining how tests are structured, what each test category verifies, and how the test pipeline proves client continuity without relying on fake seed data.
 
 ---
 
 ## 1. Test Architecture & Runner
 
-ContextRelay uses Node.js's native test runner (`node:test`) executed via `tsx` for TypeScript execution:
+Viora uses Node.js's native test runner (`node:test`) executed via `tsx` for TypeScript execution:
 
 ```bash
 npm test
@@ -48,7 +48,7 @@ The repository maintains two comprehensive test suites:
 
 ## 4. The End-to-End Client Continuity Acceptance Flow
 
-In [`tests/acceptance-e2e.test.ts`](file:///c:/Users/techt/context-relay/tests/acceptance-e2e.test.ts), ContextRelay executes a complete multi-meeting lifecycle simulating a real agency account transfer:
+In [`tests/acceptance-e2e.test.ts`](file:///c:/Users/techt/context-relay/tests/acceptance-e2e.test.ts), Viora executes a complete multi-meeting lifecycle simulating a real agency account transfer:
 
 ### Step A: Zero Seed Guarantee
 - Asserts that the client registry starts completely empty (`initialClients.length === 0`).

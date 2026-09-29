@@ -1,6 +1,6 @@
-# ContextRelay Data Flow
+# Viora Data Flow
 
-This document specifies the exact end-to-end data flow in ContextRelay, detailing data transformations, storage boundaries, and payload contracts.
+This document specifies the exact end-to-end data flow in Viora, detailing data transformations, storage boundaries, and payload contracts.
 
 ---
 

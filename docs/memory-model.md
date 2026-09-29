@@ -1,12 +1,12 @@
-# ContextRelay Memory Model
+# Viora Memory Model
 
-One of the most critical concepts in ContextRelay is the architectural distinction between raw history, durable memory, retrieved evidence, and synthesized answers.
+One of the most critical concepts in Viora is the architectural distinction between raw history, durable memory, retrieved evidence, and synthesized answers.
 
 ---
 
 ## 1. The Core Conceptual Separation
 
-Many AI projects conflate four fundamentally different concepts into a generic "RAG" pipeline. ContextRelay strictly separates them:
+Many AI projects conflate four fundamentally different concepts into a generic "RAG" pipeline. Viora strictly separates them:
 
 | Concept | What It Is | Where It Lives | Lifespan | Mutability |
 |---|---|---|---|---|
@@ -21,9 +21,9 @@ Many AI projects conflate four fundamentally different concepts into a generic "
 
 ---
 
-## 2. What "Memory" Means in ContextRelay
+## 2. What "Memory" Means in Viora
 
-In ContextRelay, memory is not a text chunk or a floating vector embedding. Memory is a **typed atomic proposition** linked to entities and temporal markers:
+In Viora, memory is not a text chunk or a floating vector embedding. Memory is a **typed atomic proposition** linked to entities and temporal markers:
 
 ### Fact Types Extracted by Hindsight:
 1. `world`: Declarative client constraints, infrastructure requirements, tech stack rules, and explicit agreements.
@@ -75,7 +75,7 @@ When a user asks: *"Who has sign-off authority for design assets?"*, Hindsight t
 
 ## 5. Temporal Indexing & Chronological Layering
 
-Client relationships evolve. Decisions made in month one are frequently revised in month three. ContextRelay models time explicitly:
+Client relationships evolve. Decisions made in month one are frequently revised in month three. Viora models time explicitly:
 
 ### Non-Destructive Ingestion
 When a newer transcript (e.g., Meeting 2) is uploaded:
@@ -109,7 +109,7 @@ When an incoming account manager asks: *"What is the portal launch deadline?"*:
 
 A common failure mode in naive AI memory products is retaining user questions and AI answers back into the memory store. Over time, this leads to **memory drift**, circular reinforcement of hallucinations, and prompt injection vulnerabilities.
 
-In ContextRelay:
+In Viora:
 - **Only validated meeting transcripts are retained into Hindsight.**
 - **User queries and generated answers are strictly ephemeral.**
 - An account manager can ask exploratory, hypothetical, or clarifying questions without risking contaminating the client's institutional knowledge graph.

@@ -1,6 +1,6 @@
-# ContextRelay Demo Runbook (5-Minute Live Walkthrough)
+# Viora Demo Runbook (5-Minute Live Walkthrough)
 
-This runbook guides an evaluator through a live 5-minute demonstration of ContextRelay using **real** meeting transcripts.
+This runbook guides an evaluator through a live 5-minute demonstration of Viora using **real** meeting transcripts.
 
 > **CRITICAL RULE:**
 > No demo data, fake clients, or seeded memories are included. The application starts 100% empty. You provide your own real `.txt` or `.md` transcript files during this demonstration.
@@ -9,7 +9,7 @@ This runbook guides an evaluator through a live 5-minute demonstration of Contex
 
 ## Prerequisites Before Demo
 
-1. ContextRelay application running locally at `http://localhost:3000`.
+1. Viora application running locally at `http://localhost:3000`.
 2. Hindsight API service running and accessible via `HINDSIGHT_API_URL` (e.g., `http://localhost:8888`).
 3. Application LLM API key configured in `.env.local` (Groq, OpenAI, Anthropic, or Gemini).
 4. Have two real meeting transcripts ready on your machine:
@@ -42,7 +42,7 @@ This runbook guides an evaluator through a live 5-minute demonstration of Contex
 2. Select `transcripts/meeting_1_kickoff_2026_01_15.txt` and upload it.
 3. Watch the upload status table:
    - The file appears with status `processing`.
-   - ContextRelay validates the file, extracts the text, and calls Hindsight Retain.
+   - Viora validates the file, extracts the text, and calls Hindsight Retain.
    - Hindsight's extraction pipeline chunks the conversation, extracts structured facts, resolves entities, and links them to temporal markers.
    - Within seconds, the status transitions to **`stored`**.
 
@@ -55,7 +55,7 @@ This runbook guides an evaluator through a live 5-minute demonstration of Contex
 2. In the **"Query Client Institutional Memory"** box, type a continuity question:
    - Example: *"What database technologies did the client reject or mandate?"*
 3. Click **"Recall"** (or press Enter).
-4. ContextRelay triggers Hindsight Recall against the client's isolated bank, retrieves ranked facts and source chunks, passes them to the Application LLM, and displays the result.
+4. Viora triggers Hindsight Recall against the client's isolated bank, retrieves ranked facts and source chunks, passes them to the Application LLM, and displays the result.
 
 ### Step 6: Inspect Grounded Answer & Verifiable Evidence (2:45 - 3:30)
 1. View the **Answer**:
@@ -82,9 +82,9 @@ This runbook guides an evaluator through a live 5-minute demonstration of Contex
 ### Step 9: Verify Client Memory Isolation (4:45 - 5:00)
 1. Return to the Client List and click **"+ New Client"** to create a second client (e.g., `Beta Dynamics`).
 2. Open Beta Dynamics's workspace (which has no transcripts yet) and ask the same database question.
-3. Observe that ContextRelay immediately reports:
+3. Observe that Viora immediately reports:
    - *"No relevant stored client memory found regarding your question."*
 4. Confirm that Client B cannot access or leak memories from Meridian Logistics.
 
 ### Step 10: 60-Second Closing Pitch
-> *"ContextRelay prevents agency-client knowledge loss. When an account manager leaves, years of client context walk out with them: what the client hates, what was tried, who approves what. ContextRelay turns client conversations into durable, client-isolated institutional memory using Hindsight, so incoming team members can continue the relationship where the previous person stopped."*
+> *"Viora prevents agency-client knowledge loss. When an account manager leaves, years of client context walk out with them: what the client hates, what was tried, who approves what. Viora turns client conversations into durable, client-isolated institutional memory using Hindsight, so incoming team members can continue the relationship where the previous person stopped."*

@@ -1,4 +1,4 @@
-# ContextRelay Technical Specification
+# Viora Technical Specification
 
 ## 1. Product Problem
 
@@ -16,13 +16,13 @@ The incoming account manager enters the relationship at a severe disadvantage. T
 
 Transcripts alone do not solve this problem. A raw transcript is an unindexed chronological narrative full of filler, transient scheduling chatter, and conversational pleasantries. Expecting an incoming account manager to read hundreds of hours of raw transcripts before a client meeting is unrealistic.
 
-ContextRelay exists to prevent agency-client knowledge loss by transforming raw meeting conversations into durable, client-isolated institutional memory, allowing incoming team members to query client history and receive evidence-grounded answers before making decisions.
+Viora exists to prevent agency-client knowledge loss by transforming raw meeting conversations into durable, client-isolated institutional memory, allowing incoming team members to query client history and receive evidence-grounded answers before making decisions.
 
 ---
 
 ## 2. Product Solution
 
-ContextRelay preserves institutional client memory through an automated, server-orchestrated pipeline:
+Viora preserves institutional client memory through an automated, server-orchestrated pipeline:
 1. **Client Isolation:** Every client account is provisioned with a dedicated, isolated Hindsight memory bank (`client:<uuid>`).
 2. **Zero Manual Memory Management:** The human account manager does not need to manually highlight text or command the system with "remember this." The raw conversation transcript is the direct input.
 3. **Mission-Driven Fact Extraction:** Hindsight extracts durable business facts (preferences, decisions, rejections, constraints, stakeholder roles) while discarding transient conversational noise.
@@ -86,7 +86,7 @@ ContextRelay preserves institutional client memory through an automated, server-
 
 ## 4. Input
 
-ContextRelay accepts two primary inputs:
+Viora accepts two primary inputs:
 1. **Client Name:** A UTF-8 string entered by the agency user to identify the client entity (e.g., `Meridian Logistics`).
 2. **Conversation Transcript File:**
    - Supported file extensions: `.txt`, `.md`
@@ -138,7 +138,7 @@ Ingestion is synchronous (`async: false` in Hindsight Retain), ensuring that the
 
 ## 6. SQLite Metadata Layer
 
-ContextRelay uses Node.js native `DatabaseSync` (or file-backed SQLite in production) configured in WAL mode with foreign keys enabled:
+Viora uses Node.js native `DatabaseSync` (or file-backed SQLite in production) configured in WAL mode with foreign keys enabled:
 
 ### Schema: `clients`
 | Column | Type | Constraints | Description |
@@ -197,7 +197,7 @@ Hindsight is not a generic vector index. It provides biomimetic, multi-faceted m
 
 ## 9. Hindsight Recall
 
-When an account manager submits a query, ContextRelay invokes `recallMemories(bankId, query)` in [`src/lib/hindsight.ts`](file:///c:/Users/techt/context-relay/src/lib/hindsight.ts):
+When an account manager submits a query, Viora invokes `recallMemories(bankId, query)` in [`src/lib/hindsight.ts`](file:///c:/Users/techt/context-relay/src/lib/hindsight.ts):
 - **Budget:** `'mid'` (balanced latency and recall depth)
 - **Max Tokens:** `4096`
 - **Types Requested:** `['world', 'experience', 'observation']`
@@ -242,7 +242,7 @@ The Application LLM (Groq, OpenAI, Anthropic, or Gemini) operates strictly as a 
 
 ### Grounding System Prompt
 ```
-You answer questions about a specific client account using only the memory evidence supplied by ContextRelay. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.
+You answer questions about a specific client account using only the memory evidence supplied by Viora. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.
 ```
 
 ### Prompt Construction
@@ -277,7 +277,7 @@ If Hindsight returns 0 memories:
 
 ## 13. Client Isolation
 
-ContextRelay guarantees total client isolation:
+Viora guarantees total client isolation:
 1. **Isolated Banks:** Client A is mapped to `client:<uuid_A>`; Client B is mapped to `client:<uuid_B>`.
 2. **Server-Side Bank Resolution:** The browser client only submits the `clientId`. The server resolves the `hindsight_bank_id` from the trusted SQLite database. Bank IDs cannot be guessed or forged by the client.
 3. **No Cross-Contamination:** Hindsight recall runs exclusively against the resolved bank ID. Memories from Client A can never leak into Client B's query results.
@@ -286,7 +286,7 @@ ContextRelay guarantees total client isolation:
 
 ## 14. Temporal Context & Conflicting Information
 
-Client relationships evolve over time. Decisions made during kickoff are frequently revised in later review meetings. ContextRelay handles this deterministically:
+Client relationships evolve over time. Decisions made during kickoff are frequently revised in later review meetings. Viora handles this deterministically:
 1. **Non-Destructive Retention:** Retaining a new transcript never overwrites or deletes earlier memories. Both kickoff memories and revision memories coexist in the client's bank.
 2. **Dual Memory Surfacing:** When a query targets a changed requirement (e.g., launch deadline or database choice), Hindsight surfaces both the earlier and later facts with their respective timestamps.
 3. **Chronological Synthesis:** The grounding prompt instructs the LLM to identify the temporal transition:
@@ -313,8 +313,8 @@ Client relationships evolve over time. Decisions made during kickoff are frequen
 
 ## 17. Honest Architectural Limitations
 
-ContextRelay is intentionally scoped to do one thing with high reliability. It explicitly does not:
+Viora is intentionally scoped to do one thing with high reliability. It explicitly does not:
 1. **Transcribe Audio:** The system requires plain text or markdown transcripts. It does not record audio or deploy automated meeting bots into Zoom/Teams calls.
 2. **Perform Multi-Tenant User Management:** The application represents a single agency workspace. It does not feature user login credentials, tenant billing, or granular role-based permissions.
 3. **Support Live Real-Time Collaboration:** Transcripts are ingested asynchronously after meetings conclude. It does not perform real-time speech streaming during live meetings.
-4. **Replace Human Judgement:** ContextRelay recalls what was stated and decided in client meetings. It does not invent strategy or override client instructions.
+4. **Replace Human Judgement:** Viora recalls what was stated and decided in client meetings. It does not invent strategy or override client instructions.

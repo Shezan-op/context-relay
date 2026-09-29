@@ -1,6 +1,6 @@
 # Retrieval Architecture Specification
 
-This document details the retrieval architecture in ContextRelay, explaining how natural-language questions from current and incoming account managers are resolved into client-isolated memory queries, multi-strategy recall results, and verifiable evidence.
+This document details the retrieval architecture in Viora, explaining how natural-language questions from current and incoming account managers are resolved into client-isolated memory queries, multi-strategy recall results, and verifiable evidence.
 
 ---
 
@@ -13,7 +13,7 @@ Retrieval is executed in:
 
 ---
 
-## 2. Why ContextRelay Is NOT "Simple Chunk Search"
+## 2. Why Viora Is NOT "Simple Chunk Search"
 
 Standard naive RAG implementations work like this:
 ```
@@ -26,8 +26,8 @@ This naive approach fails for agency client continuity:
 3. **Conversational Clutter:** Raw chunks contain greetings, interruptions, and filler that consume prompt context.
 4. **No Cross-Client Isolation:** Multi-tenant vector databases frequently leak embeddings across clients unless complex partition filters are maintained manually.
 
-### How ContextRelay Solves This with Hindsight
-Instead of searching raw text chunks, ContextRelay recalls **structured, typed memory facts** linked to a client knowledge graph:
+### How Viora Solves This with Hindsight
+Instead of searching raw text chunks, Viora recalls **structured, typed memory facts** linked to a client knowledge graph:
 - Semantic vector similarity identifies conceptually related facts.
 - BM25 sparse keyword matching captures exact terminology (`PostgreSQL`, `MongoDB`, `Aurora`).
 - Knowledge graph traversal identifies facts connected to named entities (`Marcus Vance`, `Elena Rostova`).
@@ -117,7 +117,7 @@ const response = await this.client.recall(bankId, query, {
 
 ## 5. The Empty Memory Guard
 
-When an account manager queries a topic that has never been discussed in client meetings, ContextRelay executes a **strict short-circuit**:
+When an account manager queries a topic that has never been discussed in client meetings, Viora executes a **strict short-circuit**:
 
 ```typescript
 if (!recallPayload.results || recallPayload.results.length === 0) {
@@ -131,6 +131,6 @@ if (!recallPayload.results || recallPayload.results.length === 0) {
 ```
 
 ### Why This Matters:
-1. **Zero Hallucination:** Naive AI chatbots will generate plausible-sounding advice when data is missing. ContextRelay refuses to answer if evidence is absent.
+1. **Zero Hallucination:** Naive AI chatbots will generate plausible-sounding advice when data is missing. Viora refuses to answer if evidence is absent.
 2. **Cost & Latency Optimization:** External LLM API calls are bypassed entirely when no memory exists.
 3. **Automated Verification:** Verified in `tests/core-pipeline.test.ts` (Category 7), ensuring `llmWasCalled` is strictly `false`.

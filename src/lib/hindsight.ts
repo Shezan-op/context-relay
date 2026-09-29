@@ -32,7 +32,7 @@ export class HindsightWrapper {
     try {
       await this.client.createBank(bankId, {
         name: `Client: ${clientName}`,
-        mission: `ContextRelay client bank for ${clientName}`,
+        mission: `Viora client bank for ${clientName}`,
         retainMission: HINDSIGHT_MISSION,
         retainExtractionMode: 'concise',
         enableObservations: true,
@@ -70,7 +70,7 @@ export class HindsightWrapper {
         context: 'client-transcript',
         metadata: {
           ...metadata,
-          source: 'context-relay-upload',
+          source: 'viora-upload',
         },
         async: false, // Process synchronously so ingestion status updates immediately
       });
