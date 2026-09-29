@@ -5,7 +5,7 @@ export interface LLMAnswerResult {
   conflictOrUncertainty?: string | null;
 }
 
-const SYSTEM_GROUNDING_PROMPT = `You answer questions about a specific client account using only the memory evidence supplied by ContextRelay. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.`;
+const SYSTEM_GROUNDING_PROMPT = `You answer questions about a specific client account using only the memory evidence supplied by Viora. The evidence comes from Hindsight. Do not invent facts. If the evidence does not answer the question, clearly say that the stored client memory does not contain enough information. When sources conflict, identify the conflict and prefer the newest explicit statement when dates are available. Preserve the distinction between what the client explicitly said and what is merely inferred. Keep answers useful, professional, and direct.`;
 
 const HANDOFF_SYSTEM_PROMPT = `You generate an Account Continuity Handover Brief for an incoming account manager taking over an agency client relationship. Use ONLY the supplied recalled memory evidence from Hindsight. Do not invent facts, companies, or requirements. If evidence is missing for a section, write "No recorded memory." Maintain strict grounding, professional clarity, and highlight any requirement changes over time.`;
 

@@ -17,12 +17,12 @@ Inevitably, within 15 minutes of that first call, the new person pitches somethi
 
 Trust is shattered. The client wonders why they are paying premium retainer rates to train a revolving door of agency staff.
 
-We built ContextRelay to solve this exact problem.
+We built Viora to solve this exact problem.
 
 The premise is straightforward:
 The person can leave. The client context should not.
 
-Instead of treating meeting notes as dead text files in Google Drive or dumping transcripts into a generic chatbot that hallucinates missing facts, ContextRelay turns conversational transcripts into durable, client-isolated long-term memory:
+Instead of treating meeting notes as dead text files in Google Drive or dumping transcripts into a generic chatbot that hallucinates missing facts, Viora turns conversational transcripts into durable, client-isolated long-term memory:
 
 1. Transcripts are parsed into structured entities, decisions, and temporal relationships via Hindsight.
 2. Each client operates in a cryptographically isolated memory bank.

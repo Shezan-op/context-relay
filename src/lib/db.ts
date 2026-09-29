@@ -30,14 +30,20 @@ export interface SourceRecord {
 
 // Global singleton to prevent multiple SQLite connections in development
 const globalForDb = globalThis as unknown as {
+  _vioraDb?: DatabaseSync;
   _contextRelayDb?: DatabaseSync;
 };
 
 export function getDatabase(): DatabaseSync {
-  if (!globalForDb._contextRelayDb) {
+  if (!globalForDb._vioraDb && !globalForDb._contextRelayDb) {
+    const fallbackLocal = fs.existsSync(path.join(process.cwd(), 'viora.sqlite'))
+      ? path.join(process.cwd(), 'viora.sqlite')
+      : fs.existsSync(path.join(process.cwd(), 'context_relay.sqlite'))
+      ? path.join(process.cwd(), 'context_relay.sqlite')
+      : path.join(process.cwd(), 'viora.sqlite');
     const defaultDbPath = process.env.VERCEL
-      ? path.join('/tmp', 'context-relay.db')
-      : path.join(process.cwd(), 'context_relay.sqlite');
+      ? path.join('/tmp', 'viora.db')
+      : fallbackLocal;
     const dbPath = process.env.DATABASE_PATH || defaultDbPath;
     
     // Ensure parent directory exists if a custom nested path is provided
@@ -82,10 +88,10 @@ export function getDatabase(): DatabaseSync {
       CREATE INDEX IF NOT EXISTS idx_sources_client_id ON sources(client_id);
     `);
 
-    globalForDb._contextRelayDb = db;
+    globalForDb._vioraDb = db;
   }
 
-  return globalForDb._contextRelayDb;
+  return globalForDb._vioraDb || globalForDb._contextRelayDb!;
 }
 
 // Client repository functions

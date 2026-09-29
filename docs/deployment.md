@@ -1,6 +1,6 @@
 # Deployment Guide & Runtime Environment
 
-This guide details the technical requirements, configuration variables, runtime assumptions, and deployment strategies for ContextRelay in staging and production environments.
+This guide details the technical requirements, configuration variables, runtime assumptions, and deployment strategies for Viora in staging and production environments.
 
 ---
 
@@ -15,7 +15,7 @@ This guide details the technical requirements, configuration variables, runtime 
 
 ## 2. Environment Configuration
 
-ContextRelay reads configuration from environment variables (or `.env.local` during local development).
+Viora reads configuration from environment variables (or `.env.local` during local development).
 
 | Variable | Required | Default Value | Description |
 | :--- | :---: | :--- | :--- |
@@ -54,7 +54,7 @@ npm start
 
 ### Topology A: Docker Container / Persistent VPS (Recommended)
 
-Because ContextRelay utilizes Node.js built-in `node:sqlite` for fast, zero-dependency metadata storage, running on a persistent container or VPS with mounted disk storage is the recommended topology.
+Because Viora utilizes Node.js built-in `node:sqlite` for fast, zero-dependency metadata storage, running on a persistent container or VPS with mounted disk storage is the recommended topology.
 
 #### Dockerfile Example
 
@@ -118,6 +118,6 @@ When deploying to PaaS platforms:
 ## 5. Security & Reverse Proxy Recommendations
 
 In production agency environments:
-1. **TLS / SSL Termination:** Place ContextRelay behind Nginx, Caddy, or Cloudflare with modern TLS 1.3 encryption.
-2. **Access Control:** Since ContextRelay does not implement internal user authentication, configure HTTP Basic Auth, Cloudflare Access (Zero Trust), Tailscale VPN, or an OAuth2 reverse proxy (e.g., `oauth2-proxy`) at the network boundary.
+1. **TLS / SSL Termination:** Place Viora behind Nginx, Caddy, or Cloudflare with modern TLS 1.3 encryption.
+2. **Access Control:** Since Viora does not implement internal user authentication, configure HTTP Basic Auth, Cloudflare Access (Zero Trust), Tailscale VPN, or an OAuth2 reverse proxy (e.g., `oauth2-proxy`) at the network boundary.
 3. **Payload Limits:** Configure your reverse proxy to allow file uploads up to 10MB (the application code enforces a strict 5MB limit per transcript).

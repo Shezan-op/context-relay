@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides complete technical specifications for all REST API endpoints implemented in ContextRelay. All endpoints are hosted under `/api` and implemented via Next.js App Router route handlers.
+This document provides complete technical specifications for all REST API endpoints implemented in Viora. All endpoints are hosted under `/api` and implemented via Next.js App Router route handlers.
 
 ---
 
@@ -148,7 +148,7 @@ Uploads a meeting transcript, records operational metadata in SQLite (`node:sqli
   }
   ```
 - **Error Responses:**
-  - `HTTP 400`: `Invalid file type. ContextRelay only accepts .txt and .md transcript files.`
+  - `HTTP 400`: `Invalid file type. Viora only accepts .txt and .md transcript files.`
   - `HTTP 400`: `File exceeds the 5MB size limit.`
   - `HTTP 400`: `Transcript file is empty.`
   - `HTTP 404`: `Client not found.`

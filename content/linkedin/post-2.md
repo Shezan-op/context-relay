@@ -16,7 +16,7 @@ Storing all agency client documents in one shared vector index with `{ clientId:
 3. "Helpful" LLMs hallucinate missing requirements.
 If an account manager asks about a Q3 budget that was never discussed, standard RAG setups attempt to synthesize a plausible answer from peripheral snippets. In agency operations, a hallucinated budget or commitment can breach a contract.
 
-How we architected ContextRelay differently:
+How we architected Viora differently:
 
 - Entity-centric memory retention: Instead of arbitrary token slicing, Hindsight extracts entities, facts, decisions, and temporal relationships. When decisions evolve, both facts are retained with chronological precedence.
 - Physical memory bank isolation: Every agency client gets a discrete, isolated memory bank resolved server-side. Queries for Client A physically cannot access Client B's memory.

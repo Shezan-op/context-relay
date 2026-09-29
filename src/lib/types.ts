@@ -1,5 +1,5 @@
 /**
- * Shared Continuity Data Model for ContextRelay
+ * Shared Continuity Data Model for Viora
  *
  * Defines domain models derived from Hindsight evidence for:
  * 1. Don't Repeat This (Rejected & Failed Approaches)

@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ContextRelay — Durable Client Memory for Agencies',
+  title: 'Viora — Durable Client Memory for Agencies',
   description: 'Turns real client meeting transcripts into durable institutional memory using Hindsight to answer account questions.',
 };
 

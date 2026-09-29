@@ -1,6 +1,6 @@
-# ContextRelay Documentation Index
+# Viora Documentation Index
 
-Welcome to the technical and product documentation for **ContextRelay** — an institutional memory and client continuity platform designed to prevent agency-client knowledge loss when account managers leave.
+Welcome to the technical and product documentation for **Viora** — an institutional memory and client continuity platform designed to prevent agency-client knowledge loss when account managers leave.
 
 Use the navigation matrix below to locate relevant documentation based on your role and inquiry.
 
@@ -9,11 +9,11 @@ Use the navigation matrix below to locate relevant documentation based on your r
 ## Documentation Navigation Matrix
 
 ### "I want to understand the core product and business problem"
-- [**Product Overview**](file:///c:/Users/techt/context-relay/docs/product/product-overview.md): High-level overview of ContextRelay, target users, and core value proposition.
+- [**Product Overview**](file:///c:/Users/techt/context-relay/docs/product/product-overview.md): High-level overview of Viora, target users, and core value proposition.
 - [**The Problem: Agency-Client Knowledge Loss**](file:///c:/Users/techt/context-relay/docs/product/problem.md): Detailed agency narrative illustrating how context walks out the door.
 - [**Client Continuity Model**](file:///c:/Users/techt/context-relay/docs/product/continuity-model.md): Conceptual model bridging outgoing and incoming account managers.
 - [**Real-World Scenarios**](file:///c:/Users/techt/context-relay/docs/product/scenarios.md): 3 core storytelling scenarios (handover, mind change, avoiding repeated mistakes).
-- [**Differentiation & Evidence**](file:///c:/Users/techt/context-relay/docs/product/differentiation.md): Why ContextRelay is distinct from naive RAG and generic vector search.
+- [**Differentiation & Evidence**](file:///c:/Users/techt/context-relay/docs/product/differentiation.md): Why Viora is distinct from naive RAG and generic vector search.
 - [**Interactive Visual Simulation**](file:///c:/Users/techt/context-relay/docs/scenarios/context-relay-scenarios.html): 13-step interactive visual simulation of the data journey.
 
 ---

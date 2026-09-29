@@ -1,12 +1,12 @@
-# ContextRelay System Design Specification
+# Viora System Design Specification
 
-This document defines ContextRelay as a set of discrete engineering components, detailing their boundaries, contracts, inputs, outputs, responsibilities, and failure modes.
+This document defines Viora as a set of discrete engineering components, detailing their boundaries, contracts, inputs, outputs, responsibilities, and failure modes.
 
 ---
 
 ## 1. System Decomposition
 
-ContextRelay is partitioned into four major subsystems:
+Viora is partitioned into four major subsystems:
 1. **Presentation & Workspace Shell** (`src/app/page.tsx`, `src/app/globals.css`)
 2. **API & Orchestration Layer** (`src/app/api/*`, `src/lib/ingestion.ts`, `src/lib/retrieval.ts`)
 3. **Operational Metadata Store** (`src/lib/db.ts`)

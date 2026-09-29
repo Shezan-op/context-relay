@@ -53,6 +53,6 @@ In thirty seconds, eighteen months of accumulated trust is destroyed. Acme Healt
 
 ## 4. The Core Imperative
 
-The core imperative of ContextRelay is simple:
+The core imperative of Viora is simple:
 
 **When an account manager leaves an agency, the client relationship must continue without friction. The incoming account manager must be able to recover every past decision, preference, and rejected path instantly, with verifiable evidence.**

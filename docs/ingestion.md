@@ -1,6 +1,6 @@
 # Ingestion Pipeline Specification
 
-This document describes the exact implementation of the transcript ingestion pipeline in ContextRelay, detailing validation rules, identifier generation, storage interactions, and error handling.
+This document describes the exact implementation of the transcript ingestion pipeline in Viora, detailing validation rules, identifier generation, storage interactions, and error handling.
 
 ---
 
@@ -88,7 +88,7 @@ Before any text is transmitted to Hindsight, `ingestTranscript` enforces four ma
    ```typescript
    const lowerName = filename.toLowerCase();
    if (!lowerName.endsWith('.txt') && !lowerName.endsWith('.md')) {
-     throw new Error('Invalid file type. ContextRelay only accepts .txt and .md transcript files.');
+     throw new Error('Invalid file type. Viora only accepts .txt and .md transcript files.');
    }
    ```
 3. **Non-Empty Content Check:**
@@ -161,6 +161,6 @@ const response = await this.client.retain(bankId, content, {
 ## 6. What the Pipeline Does NOT Ingest
 
 To maintain production security and architectural clarity:
-- **No Audio/Video Streams:** ContextRelay does not connect to WebRTC or record live phone audio.
+- **No Audio/Video Streams:** Viora does not connect to WebRTC or record live phone audio.
 - **No Third-Party Connectors:** No automatic polling of Slack channels, Microsoft Teams bots, Zoom recording webhooks, or Salesforce CRMs.
 - **No Unsafe Document Formats:** Word documents, PDFs, RTFs, and spreadsheet formats are rejected at the API boundary to prevent parsing ambiguity.

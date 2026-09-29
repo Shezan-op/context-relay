@@ -1,23 +1,23 @@
 # System Limitations & Non-Goals
 
-ContextRelay is designed specifically to solve **agency-client institutional knowledge loss** across account manager transitions using durable long-term memory. To maintain engineering rigor and architectural clarity, it deliberately avoids bloated feature sets that distract from this core mission.
+Viora is designed specifically to solve **agency-client institutional knowledge loss** across account manager transitions using durable long-term memory. To maintain engineering rigor and architectural clarity, it deliberately avoids bloated feature sets that distract from this core mission.
 
 This document provides a candid assessment of what the system does **not** do, its architectural boundaries, and known operational constraints.
 
 ---
 
-## 1. What ContextRelay Does NOT Do
+## 1. What Viora Does NOT Do
 
 | Domain | What Is NOT Implemented | Architectural Rationale / Impact |
 | :--- | :--- | :--- |
 | **Voice / Meeting Bots** | No autonomous meeting bots (e.g., Zoom, Google Meet, Teams recording bots like Recall.ai or Fireflies). | Ingestion requires raw meeting transcripts or call notes exported to `.txt`, `.md`, or `.json`. Audio transcription is an upstream pipeline responsibility. |
-| **Automated CRM Sync** | No automated polling or webhook sync with HubSpot, Salesforce, or Pipedrive. | CRM deals and custom fields often contain high noise-to-signal ratios. ContextRelay focuses on rich conversational transcripts and client agreements. |
+| **Automated CRM Sync** | No automated polling or webhook sync with HubSpot, Salesforce, or Pipedrive. | CRM deals and custom fields often contain high noise-to-signal ratios. Viora focuses on rich conversational transcripts and client agreements. |
 | **Direct Email / Slack Ingestion** | No IMAP/Gmail listeners or Slack app bot integrations. | Raw communication channels require rigorous filtering before ingestion. Documents must be explicitly submitted via the ingestion pipeline. |
 | **Authentication & RBAC** | No user login, OAuth2, SAML/SSO, or role-based access control. | Currently structured as an internal agency single-tenant tool or trusted network service. Authentication must be managed at the edge/reverse-proxy layer. |
 | **Multi-Agency Tenancy** | No multi-agency isolation. | The system isolates *clients within an agency* via separate Hindsight memory banks, but does not provide multi-tenant isolation between competing agencies on a shared database. |
 | **Asynchronous Job Queues** | No Redis, BullMQ, RabbitMQ, or Celery background workers. | Document ingestion (`POST /api/sources`) is strictly synchronous (`async: false` in Hindsight Retain). Very large files (>5MB) or bulk uploads of dozens of transcripts will block the HTTP request until processing finishes. |
 | **Automated HRIS Handoff Triggers** | No integration with BambooHR, Rippling, or Workday to detect when an employee leaves. | Account handover briefs are generated on-demand by the incoming account manager or team lead via the `POST /api/handoff` endpoint or UI. |
-| **Autonomous Client Agent** | The system does NOT speak directly to clients or send autonomous emails. | ContextRelay is strictly an internal decision-support tool for account managers. It never interfaces externally with the agency's clients. |
+| **Autonomous Client Agent** | The system does NOT speak directly to clients or send autonomous emails. | Viora is strictly an internal decision-support tool for account managers. It never interfaces externally with the agency's clients. |
 | **Billing & Metering** | No Stripe integration, seat licenses, or usage quotas. | Open-source reference architecture with no billing middleware. |
 | **Real-Time Telemetry** | No OpenTelemetry, Datadog, or Prometheus instrumentation. | Logging is stdout/stderr and SQLite source status records. |
 
@@ -51,7 +51,7 @@ This document provides a candid assessment of what the system does **not** do, i
 
 ## 4. Planned Future Roadmap (Non-Binding)
 
-The following capabilities are architecturally compatible with ContextRelay and represent logical next steps:
+The following capabilities are architecturally compatible with Viora and represent logical next steps:
 1. **Asynchronous Ingestion Worker:** Transitioning `POST /api/sources` to return an ingestion job ID while an async queue processes Hindsight retain calls.
 2. **Reverse Handoff Differential:** Comparing what the outgoing account manager was working on during their final 30 days versus the client's historical foundational decisions.
 3. **Automated Export Packages:** One-click generation of encrypted offline handover dossiers (PDF/Markdown) for incoming leadership during emergency account reassignments.

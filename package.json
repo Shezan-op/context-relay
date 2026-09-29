@@ -1,5 +1,5 @@
 {
-  "name": "context-relay",
+  "name": "viora",
   "version": "1.0.0",
   "description": "**Durable Client Memory for Agency Account Continuity**",
   "main": "index.js",

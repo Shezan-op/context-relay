@@ -1,6 +1,6 @@
 # Troubleshooting & Operational Diagnostics
 
-This guide provides diagnostic procedures and resolution steps for common operational issues encountered when deploying, configuring, or operating ContextRelay.
+This guide provides diagnostic procedures and resolution steps for common operational issues encountered when deploying, configuring, or operating Viora.
 
 ---
 
@@ -30,7 +30,7 @@ When encountering errors, verify the following prerequisites:
 ### Issue: "Invalid file type. Only .txt and .md files are supported"
 - **Symptom:** Uploading a transcript returns HTTP 400.
 - **Cause:** Attempting to upload a PDF, DOCX, CSV, JSON, or audio file via the file upload form.
-- **Fix:** ContextRelay accepts plain text transcripts (`.txt`) and Markdown (`.md`). Programmatic transcripts can also be ingested directly via JSON payloads to `/api/sources`. Convert documents to text or Markdown before uploading files.
+- **Fix:** Viora accepts plain text transcripts (`.txt`) and Markdown (`.md`). Programmatic transcripts can also be ingested directly via JSON payloads to `/api/sources`. Convert documents to text or Markdown before uploading files.
 
 ### Issue: "File size exceeds 5MB limit"
 - **Symptom:** Upload is rejected immediately with HTTP 400.
@@ -43,10 +43,10 @@ When encountering errors, verify the following prerequisites:
 
 ### Issue: "No relevant stored client memory found for this inquiry"
 - **Symptom:** The query returns a short, deterministic notification stating that no memories exist.
-- **Is this an error?** No. This is ContextRelay's deterministic short-circuit guard (ADR 007). When Hindsight recall yields zero matching facts, the system bypasses the LLM rather than hallucinating an answer.
+- **Is this an error?** No. This is Viora's deterministic short-circuit guard (ADR 007). When Hindsight recall yields zero matching facts, the system bypasses the LLM rather than hallucinating an answer.
 - **Troubleshooting:**
   1. Check if sources have been ingested for this specific client. If sources show status `pending` or `failed`, the facts were never committed.
-  2. Verify you are querying the correct client. ContextRelay strictly isolates memories by bank; Client A's memories cannot be retrieved under Client B.
+  2. Verify you are querying the correct client. Viora strictly isolates memories by bank; Client A's memories cannot be retrieved under Client B.
   3. Formulate the query around business decisions or preferences (e.g., "What was decided about the database?" rather than "Tell me everything").
 
 ### Issue: Sparse or Empty Account Handover Brief
@@ -75,7 +75,7 @@ When encountering errors, verify the following prerequisites:
 ### Issue: `SQLITE_BUSY: database is locked`
 - **Symptom:** Client creation or source upload fails with a locked database error.
 - **Cause:** Multiple write processes attempting concurrent transactions on `context_relay.db`, or an open SQLite GUI tool (like DB Browser) holding an exclusive write lock.
-- **Fix:** Close external SQLite viewing tools during active ingestion. ContextRelay enables WAL (Write-Ahead Logging) mode on startup, but heavy concurrent writes require sequential queuing.
+- **Fix:** Close external SQLite viewing tools during active ingestion. Viora enables WAL (Write-Ahead Logging) mode on startup, but heavy concurrent writes require sequential queuing.
 
 ### Issue: `ENOENT: no such file or directory` in `data/`
 - **Symptom:** Server crashes on startup attempting to access `data/context_relay.db`.

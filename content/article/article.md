@@ -40,16 +40,16 @@ But raw transcripts are not institutional memory.
 
 To solve account continuity, an agency needs a system that transforms conversations into structured, durable client memory—separating permanent institutional decisions from temporary conversational noise, preserving chronological shifts, and retrieving evidence when questions arise.
 
-That is what **ContextRelay** does.
+That is what **Viora** does.
 
 ---
 
-## 3. The Idea Behind ContextRelay
+## 3. The Idea Behind Viora
 
-ContextRelay is built around a single premise:
+Viora is built around a single premise:
 **The person can leave. The client context should not.**
 
-ContextRelay shifts institutional knowledge from an employee's ephemeral memory into a durable, client-isolated long-term memory layer. When meeting transcripts are uploaded, ContextRelay automatically extracts institutional business knowledge into an isolated memory bank dedicated to that client.
+Viora shifts institutional knowledge from an employee's ephemeral memory into a durable, client-isolated long-term memory layer. When meeting transcripts are uploaded, Viora automatically extracts institutional business knowledge into an isolated memory bank dedicated to that client.
 
 Crucially, the human account manager does not have to manually tag or format memory. They do not have to highlight text or command the system with "remember this." The raw meeting transcript itself is the input.
 
@@ -62,7 +62,7 @@ When an incoming account manager takes over the account, they do not have to gue
 
 ## 4. Turning Conversations into Durable Client Memory
 
-In ContextRelay, we enforce a strict distinction between four knowledge states:
+In Viora, we enforce a strict distinction between four knowledge states:
 
 ```
 [ TRANSCRIPT ] ──► [ CLIENT MEMORY ] ──► [ RETRIEVED EVIDENCE ] ──► [ GROUNDED ANSWER ]
@@ -77,7 +77,7 @@ In ContextRelay, we enforce a strict distinction between four knowledge states:
 
 ## 5. How Hindsight Fits into the Architecture
 
-ContextRelay relies on **Hindsight** as its dedicated long-term memory infrastructure.
+Viora relies on **Hindsight** as its dedicated long-term memory infrastructure.
 
 ```
 Client Meeting Transcript (.txt / .md / .json)
@@ -121,7 +121,7 @@ Hindsight owns durable entity extraction, temporal anchoring, and contextual rec
 
 In agency environments, cross-client data contamination is catastrophic. Client A's confidential pricing or tech stack must never appear in responses to Client B.
 
-ContextRelay enforces physical bank isolation:
+Viora enforces physical bank isolation:
 - When a client is registered, the system allocates a dedicated Hindsight memory bank ID (e.g., `client-acme-health-x98f21`).
 - Ingestion and recall resolve this bank ID server-side.
 - There is no shared index or fragile metadata filter. Queries for Client A physically cannot access Client B's memory.
@@ -130,7 +130,7 @@ ContextRelay enforces physical bank isolation:
 
 ## 7. Retrieval & Ranking
 
-When an incoming account manager submits a query, ContextRelay executes Hindsight recall within that client's bank.
+When an incoming account manager submits a query, Viora executes Hindsight recall within that client's bank.
 - Retrieval evaluates semantic relevance, entity associations, and temporal recency.
 - If zero relevant facts are found, the system triggers a **deterministic server-side short-circuit**, immediately returning:
   > *"No relevant stored client memory found for this inquiry."*
@@ -140,7 +140,7 @@ When an incoming account manager submits a query, ContextRelay executes Hindsigh
 
 ## 8. Verifiable Evidence
 
-Every synthesized response in ContextRelay includes an expandable **Verifiable Evidence Drawer**.
+Every synthesized response in Viora includes an expandable **Verifiable Evidence Drawer**.
 The incoming manager can inspect:
 - The exact extracted fact statement.
 - The source transcript filename.
@@ -153,7 +153,7 @@ The agency never has to trust a black-box AI; every claim is auditable against r
 
 ## 9. Grounded Answer Generation
 
-ContextRelay uses LLMs (Groq `llama-3.3-70b-versatile`, OpenAI `gpt-4o-mini`, Anthropic `claude-3-5-sonnet`, or Google `gemini-1.5-flash`) exclusively as a synthesis layer.
+Viora uses LLMs (Groq `llama-3.3-70b-versatile`, OpenAI `gpt-4o-mini`, Anthropic `claude-3-5-sonnet`, or Google `gemini-1.5-flash`) exclusively as a synthesis layer.
 
 The LLM is prompted with strict negative grounding constraints:
 - It is prohibited from using general pre-trained knowledge to speculate about client policies.
@@ -168,7 +168,7 @@ Client decisions are rarely static. In January, a client may approve standard Po
 
 In naive vector search, both documents exist as flat chunks, often causing the system to surface the older January decision as current.
 
-In ContextRelay's memory model, memories preserve temporal progression:
+In Viora's memory model, memories preserve temporal progression:
 - Both facts are retained with their respective timestamps.
 - When recalled, the LLM recognizes the chronological evolution and explains:
   > *"The client initially approved PostgreSQL during the January 15 kickoff. However, during the March 12 architecture review, CTO Sarah Martinez mandated migrating to TimescaleDB to handle high-frequency IoT data."*
@@ -177,7 +177,7 @@ In ContextRelay's memory model, memories preserve temporal progression:
 
 ## 11. The Handover Scenario
 
-When Account Manager Elena leaves and Account Manager Marcus takes over, Marcus opens ContextRelay and clicks **"Account Handover Brief"**.
+When Account Manager Elena leaves and Account Manager Marcus takes over, Marcus opens Viora and clicks **"Account Handover Brief"**.
 
 The system aggregates multi-faceted memory recalls into an executive briefing document covering:
 1. **Key Technical & Business Decisions**
@@ -189,7 +189,7 @@ Marcus walks into his first meeting armed with two years of institutional knowle
 
 ---
 
-## 12. What ContextRelay Currently Supports
+## 12. What Viora Currently Supports
 
 - Deterministic client creation and discrete Hindsight bank allocation.
 - Ingestion of `.txt`, `.md`, and `.json` conversational transcripts up to 2MB.
@@ -202,14 +202,14 @@ Marcus walks into his first meeting armed with two years of institutional knowle
 
 ---
 
-## 13. What ContextRelay Does NOT Do (Current Boundaries)
+## 13. What Viora Does NOT Do (Current Boundaries)
 
-To maintain architectural rigor, ContextRelay deliberately avoids scope creep:
+To maintain architectural rigor, Viora deliberately avoids scope creep:
 - **No live meeting recording bots:** It does not join Zoom or Google Meet calls as an audio bot. Ingestion requires exported text transcripts.
 - **No automated CRM sync:** It does not scrape Salesforce or HubSpot custom fields.
 - **No authentication / multi-agency RBAC:** It is designed as an internal single-tenant agency tool; network authentication must be managed via reverse proxy.
 - **No background job queues:** Ingestion is synchronous (`async: false`).
-- **No autonomous client-facing actions:** ContextRelay is an internal decision-support tool. It never emails or messages clients directly.
+- **No autonomous client-facing actions:** Viora is an internal decision-support tool. It never emails or messages clients directly.
 
 ---
 
@@ -217,6 +217,6 @@ To maintain architectural rigor, ContextRelay deliberately avoids scope creep:
 
 Institutional knowledge loss is not a technological inevitability; it is an architectural failure.
 
-By combining deterministic local metadata storage, entity-centric long-term memory via Hindsight, and strictly grounded LLM synthesis, ContextRelay provides agencies with a permanent institutional bridge between account managers.
+By combining deterministic local metadata storage, entity-centric long-term memory via Hindsight, and strictly grounded LLM synthesis, Viora provides agencies with a permanent institutional bridge between account managers.
 
 When employees leave, the agency's equity remains intact. The person can leave. The client context stays.

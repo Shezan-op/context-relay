@@ -1,10 +1,10 @@
-# ContextRelay Architecture
+# Viora Architecture
 
 **Durable Client Memory for Agency Account Continuity**
 
-ContextRelay preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
+Viora preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
 
-This document describes the end-to-end technical architecture of ContextRelay, detailing data flow boundaries, storage contracts, Hindsight memory infrastructure, and LLM grounding constraints.
+This document describes the end-to-end technical architecture of Viora, detailing data flow boundaries, storage contracts, Hindsight memory infrastructure, and LLM grounding constraints.
 
 ---
 
@@ -17,7 +17,7 @@ In professional agency operations, account ownership frequently rotates. When an
 - Technical mandates and compliance restrictions
 - Changes in milestones and decisions over time
 
-ContextRelay is a single-workspace web application that ingests real meeting transcripts, extracts durable business memory into isolated Hindsight memory banks, and surfaces evidence-grounded recall to current and incoming team members.
+Viora is a single-workspace web application that ingests real meeting transcripts, extracts durable business memory into isolated Hindsight memory banks, and surfaces evidence-grounded recall to current and incoming team members.
 
 ---
 
@@ -138,7 +138,7 @@ flowchart TD
 
 ## 6. Memory Isolation Strategy
 
-Agency clients often operate in competing markets. Cross-client data leaks are catastrophic. ContextRelay enforces isolation at three levels:
+Agency clients often operate in competing markets. Cross-client data leaks are catastrophic. Viora enforces isolation at three levels:
 1. **Bank Architecture:** Hindsight isolates memory banks by identifier (`client:<uuid>`). Bank A cannot read or traverse Bank B.
 2. **Server-Side Resolution:** The browser never specifies or sees raw bank IDs; it only transmits application `clientId` values. The server looks up the corresponding `hindsight_bank_id` from SQLite.
 3. **Automated Test Verification:** `tests/core-pipeline.test.ts` (Category 5) and `tests/acceptance-e2e.test.ts` programmatically verify that querying Client B cannot retrieve memories belonging to Client A.
@@ -157,7 +157,7 @@ Agency clients often operate in competing markets. Cross-client data leaks are c
 
 ## 8. Current Architectural Limitations
 
-ContextRelay is intentionally scoped to do one thing with high reliability. It explicitly does NOT:
+Viora is intentionally scoped to do one thing with high reliability. It explicitly does NOT:
 - Transcribe raw audio or deploy bots into live calls (requires text/markdown transcripts).
 - Implement multi-tenant authentication, login credentials, or RBAC (single agency workspace).
 - Integrate third-party CRM systems (Salesforce, HubSpot, Notion).

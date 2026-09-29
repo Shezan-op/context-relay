@@ -1,12 +1,12 @@
-# How ContextRelay Works
+# How Viora Works
 
-ContextRelay bridges the knowledge gap between outgoing and incoming account managers through a streamlined five-step product workflow.
+Viora bridges the knowledge gap between outgoing and incoming account managers through a streamlined five-step product workflow.
 
 ```
 [ Meeting Transcripts ]
          │
          ▼ (1. Ingestion)
-[ ContextRelay Engine ]
+[ Viora Engine ]
          │
          ▼ (2. Durable Retention)
 [ Hindsight Client Memory Bank ]
@@ -27,7 +27,7 @@ ContextRelay bridges the knowledge gap between outgoing and incoming account man
 
 ## Step 1: Ingest Client Conversations
 
-Whenever an account manager conducts a client kickoff, sprint review, or architecture sync, they export the conversation transcript or meeting notes (`.txt`, `.md`, or `.json`) and drop it into ContextRelay.
+Whenever an account manager conducts a client kickoff, sprint review, or architecture sync, they export the conversation transcript or meeting notes (`.txt`, `.md`, or `.json`) and drop it into Viora.
 
 - Ingestion takes 2 to 5 seconds.
 - The system confirms file validity and records operational metadata in SQLite.
@@ -36,7 +36,7 @@ Whenever an account manager conducts a client kickoff, sprint review, or archite
 
 ## Step 2: Extract Durable Client Memory
 
-ContextRelay transmits the raw transcript to the client's isolated **Hindsight memory bank**.
+Viora transmits the raw transcript to the client's isolated **Hindsight memory bank**.
 
 Unlike simple document search engines that merely index chunks of text, Hindsight parses the conversation to identify:
 - **Entities & Stakeholders:** Who said what, who gave approvals, and who raised objections.
@@ -47,7 +47,7 @@ Unlike simple document search engines that merely index chunks of text, Hindsigh
 
 ## Step 3: Incoming Manager Onboarding & Inquiries
 
-When an account manager resigns, the incoming manager selects the client workspace in ContextRelay.
+When an account manager resigns, the incoming manager selects the client workspace in Viora.
 
 They can immediately query specific questions:
 - *"What did the client decide regarding our cloud infrastructure?"*
@@ -59,7 +59,7 @@ They can immediately query specific questions:
 
 ## Step 4: Strict Evidence-Grounded Answers
 
-ContextRelay queries Hindsight for memories matching the inquiry.
+Viora queries Hindsight for memories matching the inquiry.
 - If relevant memories exist, an LLM synthesizes an authoritative, concise response strictly bounded by the recalled facts.
 - If no memory exists, the system deterministically replies: *"No relevant stored client memory found for this inquiry"*, eliminating AI hallucinations.
 

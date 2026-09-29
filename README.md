@@ -1,8 +1,8 @@
-# ContextRelay
+# Viora
 
 **Durable Client Memory for Agency Account Continuity**
 
-ContextRelay preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
+Viora preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
 
 ---
 
@@ -12,7 +12,7 @@ Agency-client knowledge loss: When an account manager leaves, years of context w
 
 Solution: an agent that retains every client decision and preference, and recalls it for anyone new on the account.
 
-ContextRelay is not a generic AI assistant, not a generic chatbot, not a document Q&A tool, not a RAG chatbot, not a meeting summarizer, and not a transcript search engine. 
+Viora is not a generic AI assistant, not a generic chatbot, not a document Q&A tool, not a RAG chatbot, not a meeting summarizer, and not a transcript search engine. 
 
 The product story is:
 **An agency should not lose client knowledge when a human leaves the account.**
@@ -31,7 +31,7 @@ The product story is:
    - What requirements shifted over time.
 2. **Account Manager A leaves the agency.** The documents, contracts, and transcripts may still exist in shared drives, but the institutional context is gone from the new person's head.
 3. **Account Manager B takes over.** B makes decisions without knowing the history, repeats old mistakes, asks questions that were answered months ago, proposes solutions the client already rejected, and misidentifies sign-off authorities.
-4. **ContextRelay prevents that knowledge loss.** Conversations are retained as durable, client-isolated memory. Account Manager B asks ContextRelay before client meetings, receives evidence-grounded recall, and continues the relationship instead of restarting it.
+4. **Viora prevents that knowledge loss.** Conversations are retained as durable, client-isolated memory. Account Manager B asks Viora before client meetings, receives evidence-grounded recall, and continues the relationship instead of restarting it.
 
 ---
 
@@ -49,7 +49,7 @@ Hindsight is not a generic vector index or simple retrieval vendor. It is the co
 
 ## 4. The Three Core Client Continuity Features
 
-ContextRelay organizes institutional knowledge into three unified continuity workflows:
+Viora organizes institutional knowledge into three unified continuity workflows:
 
 1. **Don't Repeat This (`/api/dont-repeat`)**:
    - Surfaces what the agency previously tried with this client that the new account manager should not repeat.
@@ -94,7 +94,7 @@ OUTPUT + EVIDENCE
 
 ## 6. Zero Seed / Zero Demo Data Guarantee
 
-ContextRelay starts **100% empty**:
+Viora starts **100% empty**:
 - Zero preloaded clients
 - Zero fake transcripts
 - Zero seeded memories or synthetic chats
@@ -105,12 +105,7 @@ ContextRelay starts **100% empty**:
 
 ## 7. Documentation Index
 
-- **Technical Architecture & Pipeline:** [`docs/context-relay-technical.md`](docs/context-relay-technical.md)
-- **Product Story & Essay:** [`docs/article.md`](docs/article.md)
-- **LinkedIn / Social Briefing:** [`docs/linkedin-post.md`](docs/linkedin-post.md)
-- **Video Walkthrough Script:** [`docs/video-script.md`](docs/video-script.md)
-- **Three Core Scenarios:** [`docs/scenarios/context-relay-scenarios.md`](docs/scenarios/context-relay-scenarios.md)
-- **Interactive Visual Story & Pipeline:** [`docs/scenarios/context-relay-scenarios.html`](docs/scenarios/context-relay-scenarios.html)
+- **Technical Architecture & Pipeline:** [`docs/architecture.md`](docs/architecture.md)
 - **Live Demo Runbook:** [`DEMO_RUNBOOK.md`](DEMO_RUNBOOK.md)
 - **Architecture Reference:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - **Data Flow Contract:** [`DATA_FLOW.md`](DATA_FLOW.md)
@@ -134,8 +129,8 @@ HINDSIGHT_API_KEY=
 LLM_PROVIDER=groq
 GROQ_API_KEY=gsk_your_groq_api_key_here
 
-# SQLite Database Path (defaults to ./context_relay.sqlite)
-DATABASE_PATH=./context_relay.sqlite
+# SQLite Database Path (defaults to ./viora.sqlite)
+DATABASE_PATH=./viora.sqlite
 ```
 
 ---
@@ -156,4 +151,4 @@ npm run build
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view ContextRelay.
+Open [http://localhost:3000](http://localhost:3000) to view Viora.

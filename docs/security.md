@@ -1,12 +1,12 @@
 # Security Architecture & Boundary Analysis
 
-This document details the security boundaries, credential isolation mechanisms, sanitization routines, and honest security limitations of ContextRelay.
+This document details the security boundaries, credential isolation mechanisms, sanitization routines, and honest security limitations of Viora.
 
 ---
 
 ## 1. Threat Model & Security Boundaries
 
-ContextRelay processes proprietary client conversation transcripts. The primary security risks are:
+Viora processes proprietary client conversation transcripts. The primary security risks are:
 1. **Credential Exposure:** Leaking API tokens (Hindsight, Groq, OpenAI, Anthropic, Gemini) to the browser.
 2. **Cross-Tenant Data Contamination:** One client accessing another client's proprietary memories.
 3. **Memory Injection & Memory Drift:** Malicious user queries corrupting the permanent institutional knowledge graph.
@@ -24,7 +24,7 @@ All upstream service credentials are isolated strictly to server-side execution:
 - `GEMINI_API_KEY`
 
 ### Automated Build Verification:
-In [`tests/core-pipeline.test.ts`](file:///c:/Users/techt/context-relay/tests/core-pipeline.test.ts) (Test Category 10), ContextRelay programmatically inspects the source code of `src/app/page.tsx` as well as compiled `.next/static` production build chunks. The test verifies that secret environment variable names never appear in client bundles:
+In [`tests/core-pipeline.test.ts`](file:///c:/Users/techt/context-relay/tests/core-pipeline.test.ts) (Test Category 10), Viora programmatically inspects the source code of `src/app/page.tsx` as well as compiled `.next/static` production build chunks. The test verifies that secret environment variable names never appear in client bundles:
 
 ```typescript
 test('Category 10: Server secrets and API keys never appear in client bundles', () => {
@@ -40,7 +40,7 @@ test('Category 10: Server secrets and API keys never appear in client bundles', 
 
 ## 3. Memory Injection Prevention
 
-In ContextRelay, **user questions and generated answers are NEVER retained into Hindsight**:
+In Viora, **user questions and generated answers are NEVER retained into Hindsight**:
 - The Hindsight Retain API is invoked exclusively during transcript file ingestion.
 - Submitting questions via `/api/query` or generating briefs via `/api/handoff` executes read-only recall operations.
 - This architectural constraint guarantees that prompt injection attempts or transient conversational lookups can never corrupt the durable client memory graph.
@@ -62,4 +62,4 @@ To maintain architectural transparency:
 - **No User Authentication (AuthN/AuthZ):** The MVP operates as an internal single-agency workspace without user accounts, passwords, or multi-user login sessions.
 - **No Role-Based Access Control (RBAC):** Any user with access to the local port can create clients and query client memories.
 - **Unencrypted SQLite at Rest:** SQLite database file `context_relay.sqlite` is stored unencrypted on the host file system. Disk-level encryption (BitLocker, LUKS) is assumed.
-- **Plaintext Transcripts in Transit to Hindsight:** Communication between ContextRelay and Hindsight runs over standard HTTP if hosted on `localhost:8888`. Production deployment requires TLS termination (`https://`).
+- **Plaintext Transcripts in Transit to Hindsight:** Communication between Viora and Hindsight runs over standard HTTP if hosted on `localhost:8888`. Production deployment requires TLS termination (`https://`).

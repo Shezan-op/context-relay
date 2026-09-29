@@ -1,6 +1,6 @@
 # Repository Structure & Component Ownership
 
-This document details the code organization of ContextRelay. For each primary directory and module, it defines explicit ownership boundaries: **what the component owns** and **what it does not own**.
+This document details the code organization of Viora. For each primary directory and module, it defines explicit ownership boundaries: **what the component owns** and **what it does not own**.
 
 ---
 
