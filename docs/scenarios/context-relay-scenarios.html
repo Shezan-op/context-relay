@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContextRelay — The Account Handover Story & Interactive Pipeline</title>
+  <style>
+    :root {
+      --bg-canvas: #0c0d0e;
+      --bg-surface: #141519;
+      --bg-surface-elevated: #1a1b20;
+      --bg-input: #0e0f12;
+      --border-subtle: #212328;
+      --border-strong: #2e3036;
+      --border-focus: #5a5d68;
+      --text-primary: #ededed;
+      --text-secondary: #8e9099;
+      --text-muted: #5d6069;
+      --accent-active: #ffffff;
+      --status-stored: #4ade80;
+      --status-fail: #f87171;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Geist Sans', 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Bar */
+    header {
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-canvas);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      background: #ededed;
+      color: #0c0d0e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: #ededed;
+      color: #0c0d0e;
+      font-weight: 600;
+    }
+
+    /* Story Stage Layout */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 32px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .stage-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* Visual System Arena */
+    .arena-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+
+    .arena-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .step-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    /* Interactive Pipeline SVG canvas */
+    .pipeline-canvas-container {
+      width: 100%;
+      background: #090a0c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 24px;
+      overflow-x: auto;
+    }
+
+    svg.pipeline-svg {
+      width: 100%;
+      min-width: 900px;
+      height: 260px;
+    }
+
+    /* Step Timeline Controls */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.12s ease;
+    }
+
+    .ctrl-btn:hover:not(:disabled) {
+      background: #ededed;
+      color: #0c0d0e;
+      border-color: #ededed;
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .p-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background: var(--border-strong);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .p-dot.active {
+      background: #ededed;
+      transform: scale(1.3);
+    }
+
+    .p-dot.visited {
+      background: var(--text-muted);
+    }
+
+    /* Explanation Section */
+    .narrative-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 840px) {
+      .narrative-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .panel-headline {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .panel-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .code-inspect {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-primary);
+      background: #060708;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 12px;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.45;
+    }
+
+    /* Comparison Box */
+    .contrast-box {
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 16px 20px;
+      background: var(--bg-surface-elevated);
+      margin-top: 10px;
+    }
+
+    .contrast-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .contrast-content {
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .with-relay {
+      border-left: 3px solid var(--status-stored);
+    }
+
+    .without-relay {
+      border-left: 3px solid var(--status-fail);
+      background: #190e10;
+      border-color: #3b171c;
+    }
+
+    .badge-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">CR</div>
+      <div>
+        <div class="brand-title">ContextRelay Interactive Pipeline</div>
+        <div class="brand-subtitle">Agency-Client Institutional Continuity Engine</div>
+      </div>
+    </div>
+    <div class="mode-toggle">
+      <button id="mode-with" class="mode-btn active" onclick="setMode('with')">With ContextRelay</button>
+      <button id="mode-without" class="mode-btn" onclick="setMode('without')">Without ContextRelay</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage-card">
+      <div class="arena-header">
+        <div class="arena-title" id="stage-phase-label">Stage 1 of 13 — Client Transcript Ingestion</div>
+        <div class="step-pill" id="stage-actor-pill">Actor: Account Manager A (Jordan)</div>
+      </div>
+
+      <!-- Pipeline SVG Diagram -->
+      <div class="pipeline-canvas-container">
+        <svg class="pipeline-svg" id="pipelineSvg" viewBox="0 0 960 260">
+          <defs>
+            <filter id="nodeGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#ededed" flood-opacity="0.15"/>
+            </filter>
+          </defs>
+
+          <!-- System Boundary Nodes -->
+          <!-- 1. Human AM A -->
+          <g id="node-am-a" transform="translate(40, 40)">
+            <rect width="110" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <circle cx="24" cy="30" r="10" fill="#2e3036"/>
+            <text x="42" y="27" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">AM Jordan</text>
+            <text x="42" y="41" fill="#8e9099" font-size="9.5" font-family="sans-serif">Kickoff Owner</text>
+          </g>
+
+          <!-- 2. Real Transcript -->
+          <g id="node-transcript" transform="translate(190, 40)">
+            <rect width="110" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <rect x="18" y="18" width="14" height="20" rx="2" fill="#212328" stroke="#5d6069"/>
+            <text x="38" y="27" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">Transcript</text>
+            <text x="38" y="41" fill="#8e9099" font-size="9.5" font-family="sans-serif">meeting_01.txt</text>
+          </g>
+
+          <!-- 3. ContextRelay Ingestion Server -->
+          <g id="node-server" transform="translate(340, 40)">
+            <rect width="120" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <text x="14" y="26" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">Next.js Server</text>
+            <text x="14" y="40" fill="#8e9099" font-size="9.5" font-family="sans-serif">Validation / Route</text>
+          </g>
+
+          <!-- 4. SQLite Metadata Store -->
+          <g id="node-sqlite" transform="translate(340, 150)">
+            <rect width="120" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <text x="14" y="26" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">SQLite DB</text>
+            <text x="14" y="40" fill="#8e9099" font-size="9.5" font-family="sans-serif">Clients & Sources</text>
+          </g>
+
+          <!-- 5. Hindsight Memory Bank -->
+          <g id="node-hindsight" transform="translate(500, 40)">
+            <rect width="140" height="170" rx="6" fill="#111215" stroke="#2e3036" stroke-width="1"/>
+            <rect x="12" y="12" width="116" height="24" rx="3" fill="#1a1b20"/>
+            <text x="20" y="28" fill="#ededed" font-size="10.5" font-weight="600" font-family="monospace">HINDSIGHT BANK</text>
+            <text x="14" y="60" fill="#8e9099" font-size="9.5" font-family="sans-serif">Bank: client:meridian</text>
+            <text x="14" y="80" fill="#8e9099" font-size="9.5" font-family="sans-serif">• Memory Mission</text>
+            <text x="14" y="100" fill="#8e9099" font-size="9.5" font-family="sans-serif">• Extracted Facts</text>
+            <text x="14" y="120" fill="#8e9099" font-size="9.5" font-family="sans-serif">• Entity Graph</text>
+            <text x="14" y="140" fill="#8e9099" font-size="9.5" font-family="sans-serif">• Temporal Index</text>
+            <text x="14" y="160" fill="#8e9099" font-size="9.5" font-family="sans-serif">• Source Chunks</text>
+          </g>
+
+          <!-- 6. Human AM B -->
+          <g id="node-am-b" transform="translate(810, 40)">
+            <rect width="110" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <circle cx="24" cy="30" r="10" fill="#3b3d45"/>
+            <text x="42" y="27" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">AM Taylor</text>
+            <text x="42" y="41" fill="#8e9099" font-size="9.5" font-family="sans-serif">New Manager</text>
+          </g>
+
+          <!-- 7. Application LLM -->
+          <g id="node-llm" transform="translate(680, 150)">
+            <rect width="120" height="60" rx="4" fill="#141519" stroke="#2e3036" stroke-width="1"/>
+            <text x="14" y="26" fill="#ededed" font-size="11" font-weight="600" font-family="sans-serif">App LLM</text>
+            <text x="14" y="40" fill="#8e9099" font-size="9.5" font-family="sans-serif">Grounding Prompt</text>
+          </g>
+
+          <!-- Connecting Static Paths -->
+          <path d="M150 70 L190 70" stroke="#212328" stroke-width="2"/>
+          <path d="M300 70 L340 70" stroke="#212328" stroke-width="2"/>
+          <path d="M400 100 L400 150" stroke="#212328" stroke-width="2"/>
+          <path d="M460 70 L500 70" stroke="#212328" stroke-width="2"/>
+          <path d="M810 70 L740 70" stroke="#212328" stroke-width="2"/>
+          <path d="M640 120 L680 160" stroke="#212328" stroke-width="2"/>
+          <path d="M800 180 L860 100" stroke="#212328" stroke-width="2"/>
+
+          <!-- Dynamic Animated Packet Node -->
+          <circle id="movingPacket" cx="95" cy="70" r="6" fill="#ededed" opacity="0"/>
+        </svg>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-bar">
+        <div class="btn-group">
+          <button id="btnPrev" class="ctrl-btn" onclick="prevStep()">Previous</button>
+          <button id="btnNext" class="ctrl-btn" onclick="nextStep()">Next Step</button>
+          <button id="btnPlay" class="ctrl-btn" onclick="togglePlay()">Auto Play</button>
+          <button id="btnReset" class="ctrl-btn" onclick="goToStep(0)">Reset</button>
+        </div>
+        <div class="progress-dots" id="dotsContainer"></div>
+      </div>
+
+      <!-- Narrative & Technical Inspector Grid -->
+      <div class="narrative-grid">
+        <div class="panel-box">
+          <div class="panel-label">Pipeline Event</div>
+          <div class="panel-headline" id="eventHeadline">Jordan uploads kickoff transcript</div>
+          <div class="panel-body" id="eventDescription">
+            Account Director Jordan finishes the architecture kickoff with Meridian Logistics. Jordan receives the meeting transcript and uploads it into ContextRelay. Jordan does not have to manually tag facts or type "remember this".
+          </div>
+          
+          <div class="contrast-box" id="contrastBox">
+            <div class="contrast-title" id="contrastTitle">Institutional Context Status</div>
+            <div class="contrast-content" id="contrastContent">
+              Conversation text enters the system as source raw material.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-box">
+          <div class="panel-label">Under the Hood: Technical State</div>
+          <div class="code-inspect" id="techInspect">{
+  "step": 1,
+  "action": "UPLOAD_TRANSCRIPT",
+  "client": "Meridian Logistics",
+  "file": "meeting_1_kickoff_2026_01_15.txt",
+  "sizeBytes": 2499
+}</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STEPS = [
+      {
+        phase: "Step 1 of 13: Transcript Ingestion",
+        actor: "Account Manager A (Jordan)",
+        headline: "Real Meeting Transcript Enters the Pipeline",
+        description: "Jordan uploads 'meeting_1_kickoff_2026_01_15.txt' containing Meridian Logistics' architectural kickoff. Jordan does not manually highlight facts or type 'remember this'. The source transcript itself is the complete input.",
+        contrastWith: "The raw transcript is captured directly into ContextRelay immediately after the meeting.",
+        contrastWithout: "Notes remain scattered across Jordan's desktop and Zoom recordings. Only Jordan knows what happened.",
+        inspect: {
+          step: 1,
+          action: "HTTP_POST_SOURCES",
+          filename: "meeting_1_kickoff_2026_01_15.txt",
+          client_id: "c8f12a-meridian",
+          contentType: "text/plain"
+        },
+        highlight: "node-transcript",
+        packet: { from: [150, 70], to: [190, 70] }
+      },
+      {
+        phase: "Step 2 of 13: Server Validation",
+        actor: "Next.js Route Handler (/api/sources)",
+        headline: "Server Validates File Extension, Encoding, and Size",
+        description: "The Next.js backend inspects the stream: verifies that client 'Meridian Logistics' exists in SQLite, checks that the extension is .txt or .md, validates non-empty UTF-8 content, and enforces the 5MB size limit.",
+        contrastWith: "Structured verification guarantees that only valid, safe transcript text enters the memory system.",
+        contrastWithout: "Unstructured files and rough audio links are saved in unindexed agency drive folders.",
+        inspect: {
+          step: 2,
+          validation: "PASSED",
+          checks: {
+            clientExists: true,
+            extensionValid: ".txt",
+            nonEmptyUTF8: true,
+            sizeBytes: 2499,
+            maxAllowed: 5242880
+          }
+        },
+        highlight: "node-server",
+        packet: { from: [240, 70], to: [340, 70] }
+      },
+      {
+        phase: "Step 3 of 13: SQLite Source Registration",
+        actor: "SQLite Layer (Node.js native DB)",
+        headline: "Source Record Recorded with Status 'Processing'",
+        description: "The server generates a UUID `sourceId` and assigns a stable Hindsight document ID `doc:<sourceId>`. It inserts a record into SQLite with `ingestion_status = 'processing'`. SQLite stores metadata only—never memory facts.",
+        contrastWith: "Relational integrity records exact upload history without data duplication.",
+        contrastWithout: "No central database registers what transcripts have or have not been processed.",
+        inspect: {
+          step: 3,
+          table: "sources",
+          sql_insert: "INSERT INTO sources (id, client_id, original_filename, hindsight_doc_id, status) VALUES (?, ?, ?, ?, ?)",
+          record: {
+            id: "src-7721a",
+            client_id: "c8f12a-meridian",
+            filename: "meeting_1_kickoff_2026_01_15.txt",
+            hindsight_document_id: "doc:src-7721a",
+            ingestion_status: "processing"
+          }
+        },
+        highlight: "node-sqlite",
+        packet: { from: [400, 100], to: [400, 150] }
+      },
+      {
+        phase: "Step 4 of 13: Hindsight Retain Invocation",
+        actor: "Hindsight Client SDK",
+        headline: "Hindsight Retain Receives Raw Transcript Content",
+        description: "The server calls Hindsight `retain(bankId, content, docId, metadata)`. Hindsight receives the raw conversation text and loads the bank's configured Client Memory Mission.",
+        contrastWith: "Hindsight takes ownership of memory extraction, freeing the account manager from manual tagging.",
+        contrastWithout: "The account manager would have to manually maintain a Notion document or spreadsheet.",
+        inspect: {
+          step: 4,
+          endpoint: "POST /v1/default/banks/client:meridian/memories",
+          payload: {
+            document_id: "doc:src-7721a",
+            context: "client-transcript",
+            metadata: { source: "context-relay-upload" }
+          }
+        },
+        highlight: "node-hindsight",
+        packet: { from: [460, 70], to: [500, 70] }
+      },
+      {
+        phase: "Step 5 of 13: Durable Fact Extraction",
+        actor: "Hindsight Extraction Pipeline",
+        headline: "Hindsight Decomposes Conversation into Durable Business Facts",
+        description: "Guided by the Client Memory Mission, Hindsight extracts: (1) Mandate: AWS Aurora PostgreSQL; (2) Rejection: MongoDB rejected due to compliance audit; (3) Authority: Marcus Vance holds sole sign-off for >$10k; (4) Brand: Navy & Cobalt, zero neon. Small talk and greetings are discarded.",
+        contrastWith: "Hindsight distills 3 pages of chatter into durable, structured institutional facts.",
+        contrastWithout: "Key constraints are buried in page 4 of an unread transcript.",
+        inspect: {
+          step: 5,
+          mission: "Extract durable business memory about this client...",
+          extracted_facts: [
+            { text: "Client requires PostgreSQL on AWS Aurora in us-east-1.", type: "world" },
+            { text: "Client compliance team strictly rejected MongoDB due to audit.", type: "world" },
+            { text: "Marcus Vance holds sole budget sign-off authority > $10,000.", type: "world" }
+          ]
+        },
+        highlight: "node-hindsight",
+        packet: { from: [540, 70], to: [570, 120] }
+      },
+      {
+        phase: "Step 6 of 13: Client Bank Isolation",
+        actor: "Hindsight Storage Engine",
+        headline: "Memory Stored in Isolated Bank `client:meridian`",
+        description: "Hindsight saves the facts, entity graph links, and verbatim source chunks into the isolated bank `client:meridian`. The SQLite source status updates to `stored`. The bank cannot be accessed by other clients.",
+        contrastWith: "Complete account isolation ensures Meridian Logistics data is strictly segregated.",
+        contrastWithout: "Agency folders mix notes across clients, risking cross-client data leaks.",
+        inspect: {
+          step: 6,
+          bank_id: "client:c8f12a-meridian",
+          status: "STORED",
+          isolation_guarantee: "Strict bank-level boundary"
+        },
+        highlight: "node-hindsight",
+        packet: { from: [570, 120], to: [600, 150] }
+      },
+      {
+        phase: "Step 7 of 13: The Handover Gap",
+        actor: "Agency Operations",
+        headline: "Account Manager A Leaves the Agency",
+        description: "Jordan Lee accepts an external position and departs the agency. The institutional memory inside Jordan's head leaves. But in ContextRelay, every client decision, preference, and rejection remains permanently preserved.",
+        contrastWith: "The human walks out the door, but the client memory stays in ContextRelay.",
+        contrastWithout: "CRITICAL FAILURE: Years of context disappear from the agency. Discovery restarts from scratch.",
+        inspect: {
+          step: 7,
+          event: "ACCOUNT_MANAGER_DEPARTURE",
+          departed_user: "Jordan Lee",
+          institutional_memory_status: "PRESERVED_IN_HINDSIGHT",
+          active_bank: "client:c8f12a-meridian"
+        },
+        highlight: "node-am-a",
+        packet: { from: [95, 70], to: [40, 70] }
+      },
+      {
+        phase: "Step 8 of 13: Incoming Query",
+        actor: "Account Manager B (Taylor)",
+        headline: "Taylor Takes Over and Queries Client Memory",
+        description: "Incoming Account Manager Taylor inherits Meridian Logistics. Before submitting a proposal, Taylor asks ContextRelay: 'What database technologies did the client reject or mandate?'",
+        contrastWith: "Taylor asks ContextRelay instead of bothering the client or guessing.",
+        contrastWithout: "Taylor has no idea MongoDB was rejected and plans to propose it to speed up development.",
+        inspect: {
+          step: 8,
+          actor: "Taylor Cole",
+          question: "What database technologies did the client reject or mandate?",
+          target_bank: "client:c8f12a-meridian"
+        },
+        highlight: "node-am-b",
+        packet: { from: [810, 70], to: [640, 70] }
+      },
+      {
+        phase: "Step 9 of 13: Multi-Strategy Recall",
+        actor: "Hindsight Recall Engine",
+        headline: "Hindsight Executes Vector, Keyword, Graph, and Temporal Recall",
+        description: "Hindsight performs multi-strategy retrieval inside Meridian's bank. It cross-references semantic meaning, keyword matching ('database', 'MongoDB', 'PostgreSQL'), and entity links. It retrieves ranked facts and verbatim chunks.",
+        contrastWith: "Multi-strategy recall returns the exact facts, not random conversational paragraphs.",
+        contrastWithout: "Searching shared drive returns 50 documents with no indication of which decision won.",
+        inspect: {
+          step: 9,
+          recall_strategy: ["dense_vector", "bm25_keyword", "knowledge_graph", "temporal_anchor"],
+          budget: "mid",
+          returned_facts: 2,
+          chunks_retrieved: 1
+        },
+        highlight: "node-hindsight",
+        packet: { from: [600, 100], to: [680, 150] }
+      },
+      {
+        phase: "Step 10 of 13: Evidence Assembly",
+        actor: "ContextRelay Retrieval Service",
+        headline: "Evidence Assembled with Source Provenance and Quotes",
+        description: "The server maps recalled facts to their source document and transcript chunks. It extracts the exact quote from Marcus Vance: 'Our enterprise compliance team strictly rejected MongoDB due to audit requirements. PostgreSQL is non-negotiable.'",
+        contrastWith: "Every statement carries verifiable provenance back to the exact meeting and date.",
+        contrastWithout: "No verifiable evidence exists; decisions rely on rumors or faulty human memory.",
+        inspect: {
+          step: 10,
+          evidence_item: {
+            fact: "Client compliance team strictly rejected MongoDB due to audit requirements.",
+            date: "2026-01-15",
+            source_file: "meeting_1_kickoff_2026_01_15.txt",
+            quote: "Our enterprise compliance team strictly rejected MongoDB due to audit requirements."
+          }
+        },
+        highlight: "node-server",
+        packet: { from: [640, 120], to: [680, 160] }
+      },
+      {
+        phase: "Step 11 of 13: Grounded LLM Synthesis",
+        actor: "Application LLM (Groq / OpenAI / Gemini)",
+        headline: "LLM Synthesizes Answer Conditioned Strictly on Evidence",
+        description: "The Application LLM receives the grounding system prompt, the question, and the evidence items. It is strictly forbidden from hallucinating or using outside assumptions. It formulates a direct, concise answer.",
+        contrastWith: "LLM answers based purely on retrieved facts; abstains if evidence is absent.",
+        contrastWithout: "Generic chatbot hallucinates plausible-sounding recommendations that violate client policy.",
+        inspect: {
+          step: 11,
+          system_prompt: "You answer questions about a specific client account using only memory evidence...",
+          grounded: true,
+          temperature: 0.1
+        },
+        highlight: "node-llm",
+        packet: { from: [680, 180], to: [740, 180] }
+      },
+      {
+        phase: "Step 12 of 13: Grounded Answer Delivery",
+        actor: "ContextRelay UI",
+        headline: "Answer and Evidence Delivered to Incoming Account Manager",
+        description: "Taylor receives the answer: 'The client mandated PostgreSQL on AWS Aurora Serverless v2 in us-east-1 and strictly rejected MongoDB due to enterprise compliance audit requirements.' The Evidence Drawer shows the date and verbatim quote.",
+        contrastWith: "Taylor understands the history in 5 seconds with verifiable quotes.",
+        contrastWithout: "Taylor walks into the meeting blind.",
+        inspect: {
+          step: 12,
+          answer: "The client mandated PostgreSQL deployed on AWS Aurora Serverless v2 in us-east-1. They strictly rejected MongoDB due to compliance requirements.",
+          hasEvidence: true,
+          evidenceCount: 2
+        },
+        highlight: "node-am-b",
+        packet: { from: [760, 160], to: [830, 100] }
+      },
+      {
+        phase: "Step 13 of 13: Account Continuity Achieved",
+        actor: "Account Manager B (Taylor)",
+        headline: "Taylor Continues the Account Without Repeating Mistakes",
+        description: "Taylor presents Aurora PostgreSQL in the steering committee. The client is pleased by the continuity. Zero mistakes repeated. Discovery did not have to restart. The client relationship continues seamlessly.",
+        contrastWith: "THE GOAL: An agency should not lose client knowledge when a human leaves the account.",
+        contrastWithout: "Taylor proposed MongoDB. The VP of Tech grew frustrated. Agency credibility was damaged.",
+        inspect: {
+          step: 13,
+          outcome: "CONTINUITY_SUCCESS",
+          mistakes_prevented: ["MongoDB rejection violation", "Brand guideline breach", "Budget routing delay"],
+          relationship_status: "SEAMLESS"
+        },
+        highlight: "node-am-b",
+        packet: { from: [860, 70], to: [860, 70] }
+      }
+    ];
+
+    let currentStep = 0;
+    let isPlaying = false;
+    let playTimer = null;
+    let currentMode = "with";
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('mode-with').classList.toggle('active', mode === 'with');
+      document.getElementById('mode-without').classList.toggle('active', mode === 'without');
+      renderStep();
+    }
+
+    function initDots() {
+      const container = document.getElementById('dotsContainer');
+      container.innerHTML = '';
+      STEPS.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = `p-dot ${i === 0 ? 'active' : ''}`;
+        dot.onclick = () => goToStep(i);
+        container.appendChild(dot);
+      });
+    }
+
+    function goToStep(index) {
+      currentStep = index;
+      renderStep();
+    }
+
+    function nextStep() {
+      if (currentStep < STEPS.length - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        stopPlay();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        stopPlay();
+      } else {
+        startPlay();
+      }
+    }
+
+    function startPlay() {
+      isPlaying = true;
+      document.getElementById('btnPlay').textContent = "Pause";
+      playTimer = setInterval(() => {
+        if (currentStep < STEPS.length - 1) {
+          nextStep();
+        } else {
+          stopPlay();
+        }
+      }, 3500);
+    }
+
+    function stopPlay() {
+      isPlaying = false;
+      document.getElementById('btnPlay').textContent = "Auto Play";
+      if (playTimer) clearInterval(playTimer);
+    }
+
+    function renderStep() {
+      const data = STEPS[currentStep];
+
+      document.getElementById('stage-phase-label').textContent = data.phase;
+      document.getElementById('stage-actor-pill').textContent = `Actor: ${data.actor}`;
+      document.getElementById('eventHeadline').textContent = data.headline;
+      document.getElementById('eventDescription').textContent = data.description;
+
+      const contrastBox = document.getElementById('contrastBox');
+      const contrastTitle = document.getElementById('contrastTitle');
+      const contrastContent = document.getElementById('contrastContent');
+
+      if (currentMode === 'with') {
+        contrastBox.className = "contrast-box with-relay";
+        contrastTitle.textContent = "With ContextRelay: Institutional Continuity";
+        contrastContent.textContent = data.contrastWith;
+      } else {
+        contrastBox.className = "contrast-box without-relay";
+        contrastTitle.textContent = "Without ContextRelay: Knowledge Loss Trap";
+        contrastContent.textContent = data.contrastWithout;
+      }
+
+      document.getElementById('techInspect').textContent = JSON.stringify(data.inspect, null, 2);
+
+      // Buttons
+      document.getElementById('btnPrev').disabled = currentStep === 0;
+      document.getElementById('btnNext').disabled = currentStep === STEPS.length - 1;
+
+      // Update dots
+      const dots = document.querySelectorAll('.p-dot');
+      dots.forEach((d, idx) => {
+        d.className = `p-dot ${idx === currentStep ? 'active' : (idx < currentStep ? 'visited' : '')}`;
+      });
+
+      // Highlight SVG nodes
+      const allNodes = ['node-am-a', 'node-transcript', 'node-server', 'node-sqlite', 'node-hindsight', 'node-am-b', 'node-llm'];
+      allNodes.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.querySelector('rect');
+          if (rect) {
+            rect.setAttribute('stroke', '#2e3036');
+            rect.setAttribute('stroke-width', '1');
+            rect.removeAttribute('filter');
+          }
+        }
+      });
+
+      if (data.highlight) {
+        const activeNode = document.getElementById(data.highlight);
+        if (activeNode) {
+          const rect = activeNode.querySelector('rect');
+          if (rect) {
+            rect.setAttribute('stroke', '#ededed');
+            rect.setAttribute('stroke-width', '2');
+            rect.setAttribute('filter', 'url(#nodeGlow)');
+          }
+        }
+      }
+
+      // Animate packet
+      const packet = document.getElementById('movingPacket');
+      if (data.packet && packet) {
+        packet.setAttribute('opacity', '1');
+        packet.setAttribute('cx', data.packet.from[0]);
+        packet.setAttribute('cy', data.packet.from[1]);
+        setTimeout(() => {
+          packet.style.transition = "all 0.6s cubic-bezier(0.16, 1, 0.3, 1)";
+          packet.setAttribute('cx', data.packet.to[0]);
+          packet.setAttribute('cy', data.packet.to[1]);
+        }, 50);
+      }
+    }
+
+    // Initialize
+    initDots();
+    renderStep();
+  </script>
+</body>
+</html>

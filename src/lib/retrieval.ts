@@ -1,6 +1,6 @@
 import { getClientRecord } from './db';
 import { getHindsightClient, HindsightWrapper, RecalledEvidenceItem } from './hindsight';
-import { generateGroundedAnswer, LLMAnswerResult } from './llm';
+import { generateGroundedAnswer, generateGroundedHandoffBrief, LLMAnswerResult } from './llm';
 
 export interface ClientAnswerResponse {
   answer: string;
@@ -9,12 +9,24 @@ export interface ClientAnswerResponse {
   clientName: string;
 }
 
+export interface ClientHandoffResponse {
+  clientName: string;
+  hasEvidence: boolean;
+  brief: string;
+  evidence: RecalledEvidenceItem[];
+  message?: string;
+}
+
 export interface RetrievalOptions {
   hindsight?: HindsightWrapper;
   llmCaller?: (
     question: string,
     evidence: RecalledEvidenceItem[],
     formattedContext: string
+  ) => Promise<LLMAnswerResult>;
+  handoffLlmCaller?: (
+    clientName: string,
+    evidence: RecalledEvidenceItem[]
   ) => Promise<LLMAnswerResult>;
 }
 
@@ -66,5 +78,45 @@ export async function answerClientQuestion(
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
     throw new Error(`Failed to generate grounded answer from retrieved memories: ${errorMsg}`);
+  }
+}
+
+export async function generateClientHandoffBrief(
+  clientId: string,
+  options?: RetrievalOptions
+): Promise<ClientHandoffResponse> {
+  const client = getClientRecord(clientId);
+  if (!client) {
+    throw new Error(`Client with ID '${clientId}' was not found.`);
+  }
+
+  const hindsight = options?.hindsight || getHindsightClient();
+  const continuityQuery = 'What are the client preferences, decisions, approvals, explicit rejections, constraints, stakeholder authorities, previous attempts, and timeline changes?';
+  const recallPayload = await hindsight.recallMemories(client.hindsight_bank_id, continuityQuery);
+
+  if (!recallPayload.results || recallPayload.results.length === 0) {
+    return {
+      clientName: client.name,
+      hasEvidence: false,
+      brief: '',
+      evidence: [],
+      message: 'No relevant stored client memory found to generate a handoff brief. Please ingest meeting transcripts first.',
+    };
+  }
+
+  try {
+    const caller = options?.handoffLlmCaller || generateGroundedHandoffBrief;
+    const llmResult = await caller(client.name, recallPayload.results);
+
+    return {
+      clientName: client.name,
+      hasEvidence: true,
+      brief: llmResult.answer,
+      evidence: recallPayload.results,
+      message: 'Account continuity handover brief generated successfully.',
+    };
+  } catch (err: any) {
+    const errorMsg = err?.message || String(err);
+    throw new Error(`Failed to generate client handoff brief: ${errorMsg}`);
   }
 }

@@ -1,6 +1,10 @@
 # ContextRelay Architecture
 
-This document describes the complete technical architecture of ContextRelay, adhering strictly to the specifications established in `PROJECT_CLARITY.md` and `prompt.md`.
+**Durable Client Memory for Agency Account Continuity**
+
+ContextRelay preserves the decisions, preferences, history, and institutional knowledge built up during client relationships so the next person on the account can continue where the previous person stopped.
+
+This document describes the technical architecture of ContextRelay, detailing data flow boundaries, storage contracts, Hindsight memory infrastructure, and LLM grounding constraints.
 
 ---
 

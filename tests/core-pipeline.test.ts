@@ -17,7 +17,7 @@ import {
   listSourcesForClient,
 } from '../src/lib/db';
 import { ingestTranscript } from '../src/lib/ingestion';
-import { answerClientQuestion } from '../src/lib/retrieval';
+import { answerClientQuestion, generateClientHandoffBrief } from '../src/lib/retrieval';
 import { HindsightWrapper, getHindsightClient } from '../src/lib/hindsight';
 import * as llmModule from '../src/lib/llm';
 
@@ -414,5 +414,85 @@ test('Category 10: Server secrets and API keys never appear in client bundles', 
         assert.equal(code.includes('GROQ_API_KEY'), false, `Secret keyword in ${file}`);
       }
     }
+  }
+});
+
+// Test Category 11: Dedicated account handover brief surfaces structured continuity evidence
+test('Category 11: Dedicated account handover brief surfaces structured continuity evidence', async () => {
+  const clientId = randomUUID();
+  const bankId = `client:${clientId}`;
+  createClientRecord({
+    id: clientId,
+    name: 'Handoff Test Client',
+    hindsight_bank_id: bankId,
+    created_at: new Date().toISOString(),
+  });
+
+  const mockEvidence = [
+    {
+      id: 'h1',
+      text: 'Client mandates PostgreSQL on AWS Aurora; strictly rejected MongoDB.',
+      type: 'world',
+      occurredStart: '2026-01-15T10:00:00Z',
+      sourceChunk: 'PostgreSQL is non-negotiable; MongoDB was rejected.',
+    },
+    {
+      id: 'h2',
+      text: 'Marcus Vance holds sole budget sign-off authority exceeding $10,000.',
+      type: 'world',
+      occurredStart: '2026-01-15T10:00:00Z',
+      sourceChunk: 'Marcus has budget sign-off.',
+    },
+  ];
+
+  const originalRecall = HindsightWrapper.prototype.recallMemories;
+  HindsightWrapper.prototype.recallMemories = async () => {
+    return { results: mockEvidence, formattedContext: '' };
+  };
+
+  let handoffCalledWithClient = '';
+  let handoffEvidencePassed: any = null;
+  const mockHandoffCaller = async (clientName: string, evidence: any[]) => {
+    handoffCalledWithClient = clientName;
+    handoffEvidencePassed = evidence;
+    return {
+      answer: '### 1. Mandated Architecture\nPostgreSQL on Aurora\n### 2. Explicit Rejections\nMongoDB',
+    };
+  };
+
+  try {
+    const briefResult = await generateClientHandoffBrief(clientId, {
+      handoffLlmCaller: mockHandoffCaller,
+    });
+
+    assert.equal(briefResult.hasEvidence, true);
+    assert.equal(briefResult.clientName, 'Handoff Test Client');
+    assert.equal(handoffCalledWithClient, 'Handoff Test Client');
+    assert.equal(briefResult.evidence.length, 2);
+    assert.match(briefResult.brief, /Mandated Architecture/);
+    assert.match(briefResult.brief, /Explicit Rejections/);
+
+    // Empty memory case
+    HindsightWrapper.prototype.recallMemories = async () => ({
+      results: [],
+      formattedContext: '',
+    });
+
+    let emptyLlmCalled = false;
+    const emptyCaller = async () => {
+      emptyLlmCalled = true;
+      return { answer: 'Fake brief' };
+    };
+
+    const emptyResult = await generateClientHandoffBrief(clientId, {
+      handoffLlmCaller: emptyCaller,
+    });
+
+    assert.equal(emptyResult.hasEvidence, false);
+    assert.equal(emptyResult.evidence.length, 0);
+    assert.equal(emptyLlmCalled, false, 'LLM must not be called when bank has zero memories');
+    assert.match(emptyResult.message || '', /No relevant stored client memory found/);
+  } finally {
+    HindsightWrapper.prototype.recallMemories = originalRecall;
   }
 });
