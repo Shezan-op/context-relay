@@ -1,0 +1,64 @@
+The most expensive sentence in an agency is:
+“We already told your predecessor this.”
+
+A new account manager only says it in the worst case:
+On their first client call... right after they pitched the exact database the client's compliance team rejected six months ago.
+
+I built Viora to stop that from happening.
+
+It is a client-memory system for agencies.
+You upload meeting transcripts.
+And the next person on the account can ask:
+- What was decided?
+- What was killed or rejected?
+- Who holds approval power?
+- What changed over time?
+
+Getting there meant changing how I think about data.
+I stopped storing conversations and started storing knowledge.
+And Hindsight (github.com/vectorize-io/hindsight) made that practical to build.
+
+Here is how the architecture works:
+
+1. Hindsight is the memory layer.
+It extracts durable facts from transcripts and recalls them later with dates and source quotes.
+
+2. SQLite holds metadata only.
+Client IDs, filenames, status, and Hindsight doc IDs. It never touches transcript text or facts.
+
+3. Isolation by construction.
+Each client gets their own locked memory bank: client:<uuid>.
+A query for Client A physically cannot reach Client B's memory. No shared database filters.
+
+4. Zero evidence = No LLM call.
+If Hindsight returns 0 facts, the code stops and says "No memory found".
+We do not call the LLM. Zero guessing. Zero made-up answers.
+
+The real test came from a logistics client with two meetings:
+- January Kickoff: MongoDB explicitly rejected by compliance. PostgreSQL approved.
+- March Review: TimescaleDB extension approved. Still no separate NoSQL cluster.
+
+A naive "latest statement wins" rule breaks here.
+
+Viora never overwrites. It keeps both facts with their dates attached.
+
+So when an account manager asks:
+"Can we propose MongoDB for telemetry?"
+The answer is:
+No. Compliance rejected MongoDB in January, and TimescaleDB was approved in March.
+
+The account manager sees the exact meeting dates, the reasons, and the direct source quotes before they ever pick up the phone.
+
+Store the knowledge, keep transcripts as provenance.
+An honest "nothing stored about that" is worth 100x more than a confident hallucination.
+
+The person running an account will eventually leave.
+What they learned about the client should not leave with them.
+
+Full open-source code:
+https://github.com/Shezan-op/context-relay
+
+Memory layer:
+https://github.com/vectorize-io/hindsight
+
+How does your agency handle client handoffs right now?
