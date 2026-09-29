@@ -1,140 +1,300 @@
-# An Account Manager Leaves. The Client Doesn't. But the Knowledge Does.
+# I Built “Don’t Repeat This” With Hindsight
 
-When an account manager leaves an agency after two years on a key client account, what actually walks out the door?
+The hardest part of changing an account manager isn't handing over the client list. It's handing over the things nobody thought were important enough to write down.
 
-The agency still has the contracts. The shared Google Drive still holds the pitch decks, creative briefs, design assets, and quarterly invoices. The recording archives still hold hundreds of hours of Zoom, Teams, and Google Meet transcripts. The documentation technically exists.
+A client may have rejected an approach six months ago, changed an approval process three times, or quietly established a preference during a meeting. Those facts rarely live in one clean database row. They live in conversations. I built Viora around a simple idea: retain that history in durable memory, then make the memory useful at the exact point where someone is about to make another decision.
 
-Yet the moment the incoming account manager steps into their first client steering call, an uncomfortable reality emerges: the institutional context is effectively gone.
+The feature I kept coming back to was deliberately named “Don't Repeat This.”
 
-The new account manager does not know what was tried six months ago and quietly discarded. They do not know that the client's VP of Technology explicitly rejected MongoDB in the kickoff meeting and will react negatively if someone proposes a NoSQL document store again. They do not know that the Product Director holds approval authority for design deliverables up to $5,000, but any budget change above $10,000 requires the VP's personal signature. They do not know that the brand guidelines strictly forbid pure-black backgrounds and neon accents, or that the beta launch deadline was officially pushed back from May 15 to June 30 during a midpoint review.
+It answers a very practical question: **what has this client already rejected, disliked, tried unsuccessfully, or ruled out?**
 
-Without that context, the new account manager repeats old mistakes. They propose ideas the client already shot down. They ask questions the client already answered three times. They restart client discovery from zero.
+That sounds like a search problem. It isn't quite. Search can find old text. What I needed was a memory layer that could preserve client-specific context over time, retrieve the relevant evidence, and let the application reason over that evidence without pretending it knew more than it did.
 
-This is agency-client knowledge loss. It is one of the most persistent operational drains in professional services. And it cannot be solved by dumping transcripts into a search engine.
+That is where [Hindsight's agent memory system on GitHub](https://github.com/vectorize-io/hindsight) became central to the architecture.
 
----
+## What Viora actually does
 
-## Why Transcripts Alone Fail
+Viora is a Next.js application backed by SQLite for application records and Hindsight for durable client memory. Each client has a corresponding Hindsight memory bank.
 
-The modern agency does not lack recordings. If anything, agencies suffer from transcript obesity. AI recording bots join every meeting, generating hundreds of pages of raw conversational text every week.
+The important distinction is that I don't use Hindsight as my primary application database.
 
-But raw transcripts are not institutional memory. A transcript is a chronological stream of consciousness. It is filled with greetings, audio checks, conversational filler, scheduling logistics, and transient chatter. A single two-hour architecture meeting might contain forty pages of text, within which lie three permanent decisions, two brand constraints, and one updated deadline.
+SQLite knows things such as:
 
-Expecting an incoming team member to read through forty past transcripts before taking over an account is a failure of workflow design. Keyword searches do not solve this either: searching for "database" returns every casual mention, joke, and side conversation across twenty files, without telling the reader which database was approved, which was rejected, or why.
+* which clients exist
+* source files and their metadata
+* filenames
+* ingestion status
+* document IDs
+* the relationship between an uploaded source and a client
 
-To solve account continuity, an agency needs a system that transforms conversations into structured, durable client memory—separating permanent institutional decisions from temporary conversational noise, preserving chronological shifts, and retrieving evidence when questions arise.
+Hindsight stores the durable knowledge extracted from client conversations.
 
-That is what Viora does.
+The flow looks roughly like this:
 
----
-
-## How Viora Preserves Client Context
-
-Viora is built around a single premise: an agency should not lose client knowledge when a human leaves the account.
-
-The system acts as a durable client memory layer for agency workspaces. When meeting transcripts are uploaded, Viora automatically extracts institutional business knowledge into an isolated memory bank dedicated to that client.
-
-Crucially, the human account manager does not have to manually manage memory. They do not have to highlight text, tag categories, or command the system with "remember that Sarah approves budgets." The source transcript itself is the input.
-
-When an incoming account manager takes over the account, they do not have to guess what happened before. They ask direct questions in natural language:
-
-- *"What technologies did the client explicitly reject or mandate?"*
-- *"Who holds final sign-off authority for design changes versus budget modifications?"*
-- *"What brand design rules and visual restrictions were established?"*
-- *"Did the portal launch timeline change across meetings?"*
-
-Viora recalls the relevant client memory, provides verifiable source evidence, and synthesizes a direct, grounded answer.
-
----
-
-## The Architecture: Hindsight as the Memory Layer
-
-To build true institutional continuity, Viora does not treat memory as a simple vector database lookup. It relies on Hindsight as its dedicated memory infrastructure.
-
-```
-Client Meeting Transcript (.txt / .md)
-                 │
-                 ▼
-Next.js Ingestion Route (/api/sources)
-  - Validates client existence, format, and 5MB size limit
-  - Records source metadata in local SQLite (status: 'processing')
-                 │
-                 ▼
-Hindsight Retain Engine
-  - Guided by explicit Client Memory Mission
-  - Discards pleasantries, filler, and credentials
-  - Extracts durable facts ('world', 'experience', 'observation')
-  - Builds entity graph and anchors temporal markers
-  - Stores memory inside isolated bank (`client:<uuid>`)
-  - Updates SQLite source status to 'stored'
-                 │
-                 ▼
-Incoming Account Manager Query (/api/query)
-  - Resolves target client's isolated bank ID
-                 │
-                 ▼
-Hindsight Multi-Strategy Recall
-  - Hybrid search: vector similarity, BM25 keywords, graph hops, temporal recency
-  - Returns ranked fact statements and verbatim source chunks
-                 │
-                 ▼
-Application LLM Grounding
-  - Evaluates retrieved evidence items
-  - Reconciles chronological conflicts across dates
-  - Synthesizes concise answer (abstains if no memory exists)
-                 │
-                 ▼
-User Interface: Answer + Verifiable Evidence Drawer
+```text
+Transcript
+    |
+    v
+Validate + register source in SQLite
+    |
+    v
+Retain transcript in Hindsight
+    |
+    v
+Client-specific memory bank
+    |
+    +----------------------+
+    |          |           |
+    v          v           v
+Don't Repeat  Timeline   Handoff
+    |          |           |
+    +----------+-----------+
+               |
+               v
+        Grounded LLM output
 ```
 
-### Isolated Client Banks
-Agency client data must never leak across account boundaries. When a client is created in Viora, the server provisions a dedicated Hindsight bank keyed by a stable UUID (`client:<uuid>`). Queries executed within Client A's workspace have no architectural access to Client B's memories.
+The application exposes separate retrieval paths for rejected approaches, decision history, and account handoffs. They share durable memory, but each asks a different question.
 
-### Mission-Driven Fact Extraction
-Hindsight's retain engine operates under a rigorous client-memory mission. It prioritizes explicit client preferences, approvals, rejections, constraints, stakeholder sign-offs, and commitments, while explicitly ignoring greetings, filler, transient scheduling chatter, and credentials. It extracts atomic statements categorized into types:
-- `world`: Objective requirements and technical architectural mandates.
-- `experience`: Historical attempts, client reactions, and past outcomes.
-- `observation`: Operational patterns and stakeholder dynamics.
+## The interesting part is what happens before the LLM
 
-### Temporal Tracking and Changing Decisions
-Client requirements do not remain static. In January, a client may approve a May 15 launch date. In March, they may shift that date to June 30 due to an audit delay. 
+My first instinct with a system like this would be to retrieve some memories, concatenate them, and ask an LLM to summarize them.
 
-Rather than overwriting history, Hindsight retains both statements as distinct facts anchored by their respective timestamps (`occurred_start`, `mentioned_at`). During recall, both facts are surfaced to the Application LLM, which recognizes the chronological evolution and explains the change clearly:
-> *"The client originally targeted a May 15, 2026 launch in the January 15 kickoff meeting. However, during the March 20 review, the launch date was officially rescheduled to June 30, 2026 to accommodate an executive audit window."*
+I deliberately didn't stop there.
 
-### Zero Memory Pollution
-When an account manager queries Viora, the query and answer are strictly ephemeral. Viora never retains user lookups into Hindsight. This ensures that transient questions or hypothetical inquiries never contaminate the client's permanent institutional knowledge base.
+For “Don't Repeat This,” the application asks Hindsight a targeted question:
 
----
+```ts
+const query =
+  'What ideas, approaches, technologies, or proposals were rejected, disliked, failed, or ruled out? What should not be repeated?';
 
-## Before and After: A Real Account Handover
+const recallPayload = await hindsight.recallMemories(
+  client.hindsight_bank_id,
+  query
+);
+```
 
-Consider Meridian Logistics, an enterprise logistics provider undergoing a major digital portal redesign:
+The query gives Hindsight semantic context about what I am trying to retrieve. But recall results are not automatically accepted as final product output.
 
-### Before Viora
-1. **Year 1:** Account Director Jordan Lee spends months establishing technical constraints with Meridian's leadership. The client mandates AWS Aurora Serverless v2 PostgreSQL, strictly rejects MongoDB due to enterprise audit compliance, specifies a Deep Navy brand palette forbidding pure-black or neon accents, and designates VP of Technology Marcus Vance as the sole signer for budgets over $10,000.
-2. **Transition:** Jordan accepts an executive role at another firm and departs the agency.
-3. **The Trap:** Incoming Account Manager Taylor Cole takes over the account. Taylor prepares a sprint review proposal suggesting MongoDB for the vehicle telemetry feed, includes a modern neon-accented dark UI mockup, and submits a $7,500 creative scope invoice directly to the VP.
-4. **The Friction:** The client is frustrated. *"We explicitly rejected MongoDB four months ago. We told Jordan no neon accents. And why is Marcus being asked to approve a creative invoice when Elena has sign-off authority?"* The client relationship starts with friction and loss of trust.
+I apply another layer of application-level filtering:
 
-### After Viora
-1. **Retention:** Both the January kickoff transcript and the March architecture review transcript were ingested into Meridian's isolated memory bank.
-2. **Transition:** Jordan departs. Taylor inherits the account.
-3. **Query:** Before drafting the proposal, Taylor opens Meridian's workspace and asks:
-   - *"What database technologies did the client reject or mandate?"*
-   - Viora recalls: *"Client approved PostgreSQL on AWS Aurora Serverless v2 and strictly rejected MongoDB due to audit compliance mandates. On March 20, TimescaleDB was approved as a PostgreSQL extension for vehicle telemetry."*
-   - Taylor asks: *"Who has approval authority for creative scope adjustments?"*
-   - Viora recalls: *"Elena Rostova was officially delegated sign-off authority for creative sprint deliverables and design assets up to $5,000 on March 20, while Marcus Vance retains sign-off for alterations exceeding $10,000."*
-4. **Evidence:** Beneath each answer, Taylor clicks to expand the exact transcript excerpt with timestamps and attendee names.
-5. **The Outcome:** Taylor sends the invoice to Elena, specifies TimescaleDB on PostgreSQL, presents the Deep Navy palette, and continues the account with the confidence of someone who has been there for two years.
+```ts
+const rejectionRegex =
+  /\b(reject|rejects|rejected|rejection|dislike|dislikes|disliked|avoid|avoids|avoided|failed|fails|failure|unsuccessful|do not use|does not use|must not|cannot use|ruled out|stopped using|no longer use|discarded)\b/i;
 
----
+const rawRejections = recallPayload.results.filter(
+  (ev) => rejectionRegex.test(ev.text)
+);
+```
 
-## An Honest Architectural Limitation
+This is intentionally boring code.
 
-Viora is engineered to solve account amnesia with precision, which means it deliberately rejects scope creep:
-- It does not listen to live microphones or inject automated recording bots into Zoom calls. It requires plain text or markdown transcripts.
-- It does not attempt to be a general-purpose project management suite, CRM, or billing platform.
-- It will not guess or invent client context. If a meeting transcript does not state who approved a decision, Viora reports that the information is absent from client memory rather than hallucinating an answer.
+I like boring code here.
 
-Institutional continuity is not about flashy chatbots. It is about preserving the hard-won decisions, preferences, and human nuances that make client partnerships work.
+Hindsight is responsible for recalling relevant memories. The application still needs deterministic rules for what qualifies as a rejection in this particular feature. That makes the behavior inspectable and prevents a broad retrieved chunk from becoming a rejection simply because another sentence in the same chunk happened to contain rejection language.
+
+That last detail is important enough that I left a comment in the implementation:
+
+```ts
+// Filter strictly on fact text to avoid chunk cross-pollution
+```
+
+A memory system can retrieve useful context without necessarily returning exactly the structured fact my UI needs. The application has to bridge that gap.
+
+## I also had to deal with the fact that decisions change
+
+A historical rejection isn't necessarily a permanent rejection.
+
+Suppose a client rejects a technology in March and then approves it in July. A naive “don't repeat this” feature could surface the March decision forever.
+
+That is worse than having no memory.
+
+So the retrieval layer looks for later approval evidence and compares it against the original rejection. When the later evidence appears to concern the same concept, the earlier item can be marked as superseded rather than treated as current.
+
+The output therefore carries state:
+
+```ts
+let status: RejectionStatus = 'active_rejection';
+let currentStatusNote: string | null = null;
+
+if (date) {
+  for (const app of approvals) {
+    const appDate = app.occurredStart || app.mentionedAt;
+
+    if (appDate && new Date(appDate).getTime() > new Date(date).getTime()) {
+      // compare the earlier rejection with the later approval
+      // ...
+      status = 'superseded_rejection';
+      currentStatusNote =
+        `Superseded: Position later altered on ${appDate.split('T')[0]}`;
+      break;
+    }
+  }
+}
+```
+
+This isn't a general-purpose temporal reasoning engine. It is deliberately narrower.
+
+The useful design principle is that I don't ask the LLM to silently decide whether an old fact is still true. I preserve the evidence and make the state transition visible in the application model.
+
+The same idea appears in the decision timeline. Decisions are retrieved, normalized, deduplicated, sorted chronologically, and then compared for possible changes.
+
+That gives me something much more useful than a list of search results: a history in which a reader can distinguish an old decision from a later one.
+
+## Hindsight is the memory layer, not the entire application
+
+One design decision I would keep even in a larger production deployment is the separation between application state and memory.
+
+When a transcript arrives, Viora first validates the client and source:
+
+```ts
+const sourceId = randomUUID();
+const hindsightDocId = `doc:${sourceId}`;
+
+const sourceRecord: SourceRecord = {
+  id: sourceId,
+  client_id: clientId,
+  original_filename: filename,
+  content_type: fileInput.contentType || 'text/plain',
+  size_bytes: fileInput.sizeBytes,
+  meeting_date: fileInput.meetingDate || null,
+  hindsight_document_id: hindsightDocId,
+  ingestion_status: 'processing',
+  error_message: null,
+  created_at: new Date().toISOString(),
+};
+
+createSourceRecord(sourceRecord);
+```
+
+Only after that does the application ensure the client's Hindsight bank exists and retain the transcript.
+
+If retention succeeds, SQLite records the source as stored. If it fails, the source is marked failed and a readable error is preserved.
+
+That gives me two useful properties: Hindsight can own memory without becoming the source of truth for application bookkeeping, and I can trace recalled memory back to the original document through the Hindsight document ID. That makes evidence much easier to inspect.
+
+## I don't call the LLM when there is no evidence
+
+This is one of the smallest decisions in the code, but it is one of the most important.
+
+For a normal client question, the retrieval path does this:
+
+```ts
+const recallPayload = await hindsight.recallMemories(
+  client.hindsight_bank_id,
+  question
+);
+
+if (!recallPayload.results || recallPayload.results.length === 0) {
+  return {
+    answer: 'No relevant stored client memory found regarding your question.',
+    hasEvidence: false,
+    evidence: [],
+    clientName: client.name,
+  };
+}
+```
+
+Only after evidence exists does the application call the grounded answer generator.
+
+That creates a hard boundary between “the memory system found something” and “the language model generated an answer.”
+
+I prefer that to giving the model an empty context and hoping it behaves conservatively.
+
+It also gives the UI something concrete to communicate: there is either stored evidence for the question or there isn't.
+
+The same principle applies to the handoff flow. It recalls continuity information—preferences, decisions, approvals, rejections, constraints, stakeholder authority, previous attempts, and timeline changes—before invoking the LLM. It then derives the structured “Don't Repeat This” and timeline data from the same memory model, so the handoff isn't just a blob of generated prose.
+
+## What this looks like in practice
+
+Imagine a client has said during previous conversations that a particular campaign approach failed, that a specific visual direction should not be used, and that final creative approval belongs to one stakeholder.
+
+Months later, a new account manager opens the client record.
+
+Instead of asking another person:
+
+> “Did they ever say anything about this?”
+
+they can ask the system directly.
+
+For a question about a general client preference, Viora recalls relevant memories and passes the evidence to the grounded answer generator.
+
+For “Don't Repeat This,” the system narrows the recall results to explicit rejection or failure language, extracts a reason when the source contains one, records the date and source, and checks whether later evidence appears to supersede the rejection.
+
+For a handoff, the same client memory becomes the basis for a structured account brief.
+
+The important part isn't that the LLM can summarize a transcript. Modern language models are already good at that.
+
+The useful behavior comes from being able to ask a question months later and still have the relevant client history available, isolated to the correct client, with enough provenance to understand where the answer came from.
+
+That is the distinction I find useful when thinking about [what agent memory actually means](https://vectorize.io/what-is-agent-memory).
+
+## Why I chose Hindsight for this layer
+
+I could have built a conventional retrieval pipeline around embeddings, a vector database, and application-managed metadata.
+
+That would solve part of the problem.
+
+The problem I was actually trying to solve was broader than nearest-neighbor search. Client relationships accumulate facts, preferences, decisions, failures, changes, and context over time. I wanted a memory system that could handle that history while letting my application ask semantic questions instead of maintaining a growing collection of hand-written SQL queries.
+
+Hindsight gives me that memory boundary.
+
+The application still owns the workflow logic. It decides what constitutes a rejection, how to identify a superseding decision, when to call an LLM, how evidence is displayed, and how source records are tracked.
+
+Hindsight owns the durable recall problem.
+
+The separation is useful because it lets me be opinionated where the product behavior needs to be deterministic without rebuilding the entire memory system myself.
+
+The [Hindsight documentation](https://hindsight.vectorize.io/) is also a useful reference point for understanding the underlying retain/recall model rather than treating memory as a mysterious prompt feature.
+
+## What I learned building it
+
+### 1. Memory retrieval and application semantics are different problems
+
+A memory system can retrieve the right neighborhood of information without knowing exactly how my application should interpret it.
+
+I don't expect Hindsight to know that “rejected,” “failed,” and “ruled out” should become a particular UI object called a rejection.
+
+I encode that application meaning explicitly.
+
+### 2. Provenance matters as much as recall
+
+A generated answer without a traceable source is difficult to trust in a client workflow.
+
+Keeping a Hindsight document ID alongside the SQLite source record gives me a practical bridge from recalled evidence back to the original transcript.
+
+That makes debugging and human verification much easier.
+
+### 3. Historical truth is not the same as current truth
+
+A memory being old doesn't make it useless. But an old decision shouldn't automatically be presented as the current decision.
+
+The timeline and supersession logic exist because client knowledge changes.
+
+This is one of the reasons I prefer showing evidence and dates rather than pretending the memory layer produces an eternal set of facts.
+
+### 4. Empty retrieval should be a first-class state
+
+“No relevant memory found” is a valid result.
+
+It shouldn't automatically become a prompt for the LLM to fill in the gap.
+
+I found it cleaner to make absence explicit and keep generation downstream of successful retrieval.
+
+### 5. Durable memory changes what an assistant can be responsible for
+
+Without durable memory, an assistant is mostly helping with the current interaction.
+
+With durable, client-specific memory, the assistant can participate in continuity.
+
+That doesn't mean it should make decisions on behalf of an account team. It means it can surface the history that a person would otherwise have to reconstruct manually.
+
+That is the part of the system I find most valuable.
+
+I started with a simple question: **what if the next account manager could ask what not to repeat and get an answer grounded in everything the client had already told us?**
+
+The implementation turned out to be less about generating a clever answer and more about building the memory path underneath it: retain the right information, recall it by client, filter it carefully, preserve provenance, detect changes, and only then generate language.
+
+That is why “Don't Repeat This” became the feature I kept coming back to. The interesting part isn't the sentence the model writes.
+
+It's the fact that the system remembers why that sentence matters.
