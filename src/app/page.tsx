@@ -1,6 +1,24 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  Copy,
+  Check,
+  RefreshCw,
+  FileText,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Search,
+  ArrowRight,
+  Clock,
+  Ban,
+  MessageSquare,
+  UploadCloud,
+  CheckCircle2,
+  ExternalLink,
+} from 'lucide-react';
 
 interface Client {
   id: string;
@@ -83,6 +101,60 @@ interface HandoffResult {
 
 type ContinuityTab = 'overview' | 'dont-repeat' | 'timeline' | 'handoff' | 'query';
 
+// Reusable Presentation Components
+function ErrorBanner({
+  message = "Couldn't load memory for this client",
+  detail,
+  onRetry,
+}: {
+  message?: string;
+  detail?: string | null;
+  onRetry?: () => void;
+}) {
+  const [showDetail, setShowDetail] = useState(false);
+  if (!detail) return null;
+
+  return (
+    <div className="alert-error-box" role="alert">
+      <div className="alert-error-main">
+        <div className="alert-error-text">
+          <AlertCircle size={16} />
+          <span>{message}</span>
+        </div>
+        <div className="alert-error-actions">
+          {onRetry && (
+            <button type="button" onClick={onRetry} className="btn btn-secondary btn-sm">
+              Try again
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowDetail(!showDetail)}
+            className="btn btn-subtle btn-sm"
+          >
+            {showDetail ? 'Hide details' : 'Show details'}
+          </button>
+        </div>
+      </div>
+      {showDetail && (
+        <div className="alert-error-details">
+          {detail}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SkeletonRows({ count = 3 }: { count?: number }) {
+  return (
+    <div className="skeleton-container" aria-label="Loading data">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="skeleton-row" />
+      ))}
+    </div>
+  );
+}
+
 export default function ContextRelayApp() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -129,6 +201,10 @@ export default function ContextRelayApp() {
 
   // General error state
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // Copy status for Bank ID and Dossier
+  const [copiedBankId, setCopiedBankId] = useState(false);
+  const [copiedBrief, setCopiedBrief] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -327,541 +403,359 @@ export default function ContextRelayApp() {
     }
   }
 
+  function handleCopyBankId(bankId: string) {
+    navigator.clipboard.writeText(bankId);
+    setCopiedBankId(true);
+    setTimeout(() => setCopiedBankId(false), 2000);
+  }
+
+  function handleCopyBrief(text: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedBrief(true);
+    setTimeout(() => setCopiedBrief(false), 2000);
+  }
+
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 
   return (
     <div className="app-container">
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <aside className="sidebar">
         <div className="brand-header">
           <div className="brand-title">
             <span className="brand-logo-icon">CR</span>
-            ContextRelay
+            <span>ContextRelay</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <div className="brand-tagline">
             Client context that survives the person.
           </div>
         </div>
 
         <div className="sidebar-section">
-          <div className="section-label">Client Accounts</div>
+          <div className="section-label">Client accounts</div>
           <div className="client-list">
             {isLoadingClients ? (
-              <div style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Loading workspaces...
+              <div style={{ padding: '12px 8px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                Loading accounts...
               </div>
             ) : clients.length === 0 ? (
-              <div style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>
+              <div style={{ padding: '12px 8px', fontSize: '13px', color: 'var(--text-muted)' }}>
                 No clients registered.
               </div>
             ) : (
               clients.map((c) => (
                 <button
                   key={c.id}
+                  type="button"
                   onClick={() => setSelectedClientId(c.id)}
                   className={`client-nav-btn ${selectedClientId === c.id ? 'active' : ''}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                     <span className="client-avatar-glyph">
                       {c.name.slice(0, 1).toUpperCase()}
                     </span>
                     <span className="truncate">{c.name}</span>
                   </div>
-                  <span className="badge-mono">BANK</span>
+                  <span className="client-badge-status">Memory active</span>
                 </button>
               ))
             )}
           </div>
 
           <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
-            className="btn btn-secondary"
-            style={{ width: '100%', marginTop: '12px', fontSize: '12px' }}
+            className="btn btn-secondary sidebar-register-btn"
           >
-            + Register New Client
+            <Plus size={14} />
+            <span>Register new client</span>
           </button>
         </div>
 
         <div className="sidebar-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
-            <span className="status-indicator-dot online" />
-            <span>Memory Engine: Hindsight</span>
-          </div>
-          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-            Isolation: Discrete Per-Client Bank
+          <div className="sidebar-footer-text">
+            <div>Memory engine: Hindsight</div>
+            <div>Isolation: per-client bank</div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Area */}
       <main className="main-content">
         {selectedClient ? (
           <>
-            {/* Top Workspace Header */}
+            {/* Header Card */}
             <header className="workspace-header">
               <div className="workspace-title-row">
                 <div className="workspace-title-group">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="workspace-title-line">
                     <h1 className="workspace-client-name">{selectedClient.name}</h1>
-                    <span className="badge-mono" style={{ color: '#4ade80', borderColor: '#1f3b2a' }}>
-                      CONNECTED
+                    <span className="pill-connected">
+                      <span className="pill-dot" />
+                      Connected
                     </span>
                   </div>
-                  <div className="workspace-bank-id">
-                    <span>Hindsight Bank:</span>
-                    <span className="truncate" style={{ maxWidth: '340px' }}>{selectedClient.hindsight_bank_id}</span>
+                  <div className="workspace-bank-meta">
+                    <span>Memory bank:</span>
+                    <span className="workspace-bank-id-text" title={selectedClient.hindsight_bank_id}>
+                      {selectedClient.hindsight_bank_id}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyBankId(selectedClient.hindsight_bank_id)}
+                      className="copy-bank-btn"
+                      title="Copy bank ID"
+                    >
+                      {copiedBankId ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedBankId ? 'Copied' : 'Copy'}</span>
+                    </button>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="workspace-actions">
                   <button
+                    type="button"
                     onClick={() => {
                       loadDontRepeat(selectedClient.id);
                       loadTimeline(selectedClient.id);
                     }}
                     className="btn btn-secondary"
-                    style={{ fontSize: '12px' }}
                     title="Refresh memory records"
                   >
-                    Refresh Memory
+                    <RefreshCw size={14} />
+                    <span>Refresh memory</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setActiveTab('handoff');
                       handleGenerateHandoff();
                     }}
                     className="btn btn-primary"
-                    style={{ fontSize: '12px' }}
                     disabled={isGeneratingHandoff}
                   >
-                    {isGeneratingHandoff ? 'Synthesizing...' : 'Prepare Handoff Brief'}
+                    {isGeneratingHandoff ? (
+                      <>
+                        <span className="spinner" />
+                        <span>Synthesizing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={14} />
+                        <span>Prepare handoff brief</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="tabs-nav">
+              {/* Underline Tabs */}
+              <div className="tabs-nav" role="tablist">
                 <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'overview'}
                   onClick={() => setActiveTab('overview')}
                   className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
                 >
-                  Continuity Overview
+                  Continuity overview
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'dont-repeat'}
                   onClick={() => setActiveTab('dont-repeat')}
                   className={`tab-btn ${activeTab === 'dont-repeat' ? 'active' : ''}`}
                 >
-                  Don't Repeat This
+                  <span>Don't repeat this</span>
                   {dontRepeatItems.length > 0 && (
                     <span className="tab-counter-badge">{dontRepeatItems.length}</span>
                   )}
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'timeline'}
                   onClick={() => setActiveTab('timeline')}
                   className={`tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
                 >
-                  Decision Timeline
+                  <span>Decision timeline</span>
                   {timelineDecisions.length > 0 && (
                     <span className="tab-counter-badge">{timelineDecisions.length}</span>
                   )}
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'handoff'}
                   onClick={() => setActiveTab('handoff')}
                   className={`tab-btn ${activeTab === 'handoff' ? 'active' : ''}`}
                 >
-                  Handoff Brief
+                  Handoff brief
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'query'}
                   onClick={() => setActiveTab('query')}
                   className={`tab-btn ${activeTab === 'query' ? 'active' : ''}`}
                 >
-                  Ask Memory
+                  Ask memory
                 </button>
               </div>
             </header>
 
-            {/* Error Notifications */}
-            {generalError && <div className="alert-box alert-error">{generalError}</div>}
+            {/* General Error Alert */}
+            {generalError && (
+              <ErrorBanner
+                message="Couldn't load client data"
+                detail={generalError}
+                onRetry={fetchClients}
+              />
+            )}
 
-            <div className="workspace-body">
-              {/* TAB 1: OVERVIEW */}
-              {activeTab === 'overview' && (
-                <div className="feature-view-container">
-                  {/* Primary Action Banner */}
-                  <div className="overview-action-banner">
-                    <div>
-                      <div className="overview-banner-title">
-                        Client Continuity Workspace: {selectedClient.name}
-                      </div>
-                      <div className="overview-banner-subtitle">
-                        Preserves durable account history, past technical decisions, and rejected approaches so incoming account managers never start from zero.
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setActiveTab('handoff');
-                        handleGenerateHandoff();
-                      }}
-                      className="btn btn-primary"
-                      disabled={isGeneratingHandoff}
-                    >
-                      {isGeneratingHandoff ? 'Generating...' : 'Prepare Full Handoff Brief →'}
-                    </button>
+            {/* TAB 1: CONTINUITY OVERVIEW */}
+            {activeTab === 'overview' && (
+              <div className="feature-view-container">
+                <div className="overview-action-banner">
+                  <div>
+                    <h2 className="overview-banner-title">
+                      Client continuity workspace: {selectedClient.name}
+                    </h2>
+                    <p className="overview-banner-subtitle">
+                      Preserves durable account history, past technical decisions, and rejected approaches so incoming account managers never start from zero.
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('handoff');
+                      handleGenerateHandoff();
+                    }}
+                    className="btn btn-primary"
+                    disabled={isGeneratingHandoff}
+                  >
+                    <span>Prepare full handoff brief</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
 
-                  {/* 2-Column Split: Don't Repeat vs Decision Timeline Preview */}
-                  <div className="continuity-overview-grid">
-                    {/* Don't Repeat This Column */}
-                    <div className="panel">
-                      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <span className="panel-title" style={{ color: '#fca5a5' }}>
-                            Don't Repeat This
-                          </span>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            Rejected ideas and failed attempts
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setActiveTab('dont-repeat')}
-                          className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '3px 8px' }}
-                        >
-                          View All ({dontRepeatItems.length}) →
-                        </button>
-                      </div>
-
-                      <div className="panel-body">
-                        {isLoadingDontRepeat ? (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Retrieving recorded rejections...
-                          </div>
-                        ) : dontRepeatItems.length === 0 ? (
-                          <div className="empty-continuity-state">
-                            <div className="empty-continuity-title">No recorded rejected approaches</div>
-                            <div className="empty-continuity-desc">
-                              No rejected ideas, failed approaches, or disliked directions are currently recorded for this client.
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {dontRepeatItems.slice(0, 3).map((item) => (
-                              <div key={item.id} className={`rejection-card ${item.status === 'superseded_rejection' ? 'superseded' : ''}`}>
-                                <div className="rejection-header">
-                                  <div className="rejection-item-text">{item.item}</div>
-                                  <span className={`rejection-badge ${item.status === 'superseded_rejection' ? 'rejection-badge-superseded' : 'rejection-badge-active'}`}>
-                                    {item.status === 'superseded_rejection' ? 'Superseded' : 'Active Rejection'}
-                                  </span>
-                                </div>
-                                <div className="rejection-reason-block">
-                                  <span className="rejection-reason-label">Reason:</span>
-                                  {item.reason}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Decision Timeline Column */}
-                    <div className="panel">
-                      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <span className="panel-title">Decision Timeline</span>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            Chronological decision evolution
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setActiveTab('timeline')}
-                          className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '3px 8px' }}
-                        >
-                          View Full Timeline ({timelineDecisions.length}) →
-                        </button>
-                      </div>
-
-                      <div className="panel-body">
-                        {isLoadingTimeline ? (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Retrieving decision history...
-                          </div>
-                        ) : timelineDecisions.length === 0 ? (
-                          <div className="empty-continuity-state">
-                            <div className="empty-continuity-title">No recorded decisions</div>
-                            <div className="empty-continuity-desc">
-                              No explicit decisions, mandates, or approvals are currently recorded for this client.
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {timelineDecisions.slice(0, 3).map((d) => (
-                              <div key={d.id} className="timeline-card">
-                                <div className="timeline-card-header">
-                                  <span className="timeline-date-tag">
-                                    {d.date ? new Date(d.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not recorded'}
-                                  </span>
-                                  <span className={`decision-status-badge ${d.status === 'current' ? 'decision-badge-current' : 'decision-badge-superseded'}`}>
-                                    {d.status === 'current' ? 'Current' : 'Superseded'}
-                                  </span>
-                                </div>
-                                <div className="decision-statement">{d.statement}</div>
-                                {d.supersededBy && (
-                                  <div className="decision-evolution-link">
-                                    <span className="evolution-arrow">↳</span>
-                                    <span>Superseded by later decision: {d.supersededBy}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Transcript Ingestion Panel */}
-                  <div className="panel" style={{ marginTop: '16px' }}>
+                {/* 2-Column Split: Don't Repeat vs Decision Timeline */}
+                <div className="continuity-overview-grid">
+                  {/* Left Column: Don't Repeat This Preview */}
+                  <div className="panel">
                     <div className="panel-header">
-                      <span className="panel-title">Client Transcripts & Source Documents</span>
+                      <div className="panel-header-left">
+                        <h3 className="panel-title">Don't repeat this</h3>
+                        <p className="panel-subtitle">Rejected ideas and failed attempts</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('dont-repeat')}
+                        className="btn btn-secondary btn-sm"
+                      >
+                        View all ({dontRepeatItems.length})
+                      </button>
                     </div>
+
                     <div className="panel-body">
-                      <div className="upload-container">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".txt,.md"
-                          onChange={handleFileUpload}
-                          style={{ display: 'none' }}
-                          id="file-upload"
-                          disabled={isUploading}
+                      {isLoadingDontRepeat ? (
+                        <SkeletonRows count={3} />
+                      ) : dontRepeatError ? (
+                        <ErrorBanner
+                          message="Couldn't load rejected approaches"
+                          detail={dontRepeatError}
+                          onRetry={() => loadDontRepeat(selectedClient.id)}
                         />
-                        <label htmlFor="file-upload" className={`upload-zone ${isUploading ? 'disabled' : ''}`}>
-                          <div className="upload-icon">↑</div>
-                          <div className="upload-prompt">
-                            {isUploading ? 'Ingesting transcript into Hindsight memory...' : 'Drop meeting transcript (.txt or .md) here to retain durable context'}
-                          </div>
-                          <div className="upload-subtext">
-                            ContextRelay synchronously parses client statements, decisions, and rejections into long-term memory.
-                          </div>
-                        </label>
-                      </div>
-
-                      {uploadError && <div className="alert-box alert-error" style={{ marginTop: '12px' }}>{uploadError}</div>}
-
-                      {/* Sources Table */}
-                      <div style={{ marginTop: '16px' }}>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                          INGESTED SOURCE REGISTRY ({sources.length})
+                      ) : dontRepeatItems.length === 0 ? (
+                        <div className="empty-state">
+                          <h4 className="empty-state-title">No recorded rejected approaches</h4>
+                          <p className="empty-state-desc">
+                            No rejected ideas, failed approaches, or disliked directions are currently recorded for this client.
+                          </p>
+                          <label htmlFor="overview-file-upload" className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                            Add meeting notes to start building memory
+                          </label>
                         </div>
-                        {sources.length === 0 ? (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '12px', textAlign: 'center' }}>
-                            No transcripts uploaded for this client yet.
-                          </div>
-                        ) : (
-                          <div className="sources-table-wrap">
-                            <table className="sources-table">
-                              <thead>
-                                <tr>
-                                  <th>File</th>
-                                  <th>Status</th>
-                                  <th>Size</th>
-                                  <th>Ingested At</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {sources.map((s) => (
-                                  <tr key={s.id}>
-                                    <td className="font-mono">{s.original_filename}</td>
-                                    <td>
-                                      <span className={`status-pill ${s.ingestion_status}`}>
-                                        {s.ingestion_status.toUpperCase()}
-                                      </span>
-                                    </td>
-                                    <td className="font-mono text-muted">{Math.round(s.size_bytes / 1024)} KB</td>
-                                    <td className="font-mono text-muted">{new Date(s.created_at).toLocaleDateString()}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: DON'T REPEAT THIS */}
-              {activeTab === 'dont-repeat' && (
-                <div className="feature-view-container">
-                  <div className="feature-header">
-                    <div className="feature-title-group">
-                      <div className="feature-title">
-                        <span style={{ color: '#f87171' }}>•</span>
-                        Don't Repeat This: Client Rejections & Failed Approaches
-                      </div>
-                      <div className="feature-subtitle">
-                        Identifies client-specific rejected ideas, failed attempts, and disliked technologies so the next account manager avoids repeating past mistakes.
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => loadDontRepeat(selectedClient.id)}
-                      className="btn btn-secondary"
-                      style={{ fontSize: '12px' }}
-                      disabled={isLoadingDontRepeat}
-                    >
-                      {isLoadingDontRepeat ? 'Refreshing...' : 'Refresh Rejections'}
-                    </button>
-                  </div>
-
-                  {dontRepeatError && <div className="alert-box alert-error">{dontRepeatError}</div>}
-
-                  {isLoadingDontRepeat ? (
-                    <div className="panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                      Querying Hindsight long-term memory for rejected approaches...
-                    </div>
-                  ) : dontRepeatItems.length === 0 ? (
-                    <div className="empty-continuity-state">
-                      <div className="empty-continuity-title">No recorded rejected approaches were found for this client.</div>
-                      <div className="empty-continuity-desc">
-                        No meeting transcripts have recorded any explicit client rejections, dislikes, or failed attempts for this workspace.
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="dont-repeat-list">
-                      {dontRepeatItems.map((item) => {
-                        const isExpanded = !!expandedRejectionEvidence[item.id];
-                        return (
-                          <div
-                            key={item.id}
-                            className={`rejection-card ${item.status === 'superseded_rejection' ? 'superseded' : ''}`}
-                          >
-                            <div className="rejection-header">
-                              <div className="rejection-item-text">{item.item}</div>
-                              <span
-                                className={`rejection-badge ${
-                                  item.status === 'superseded_rejection'
-                                    ? 'rejection-badge-superseded'
-                                    : 'rejection-badge-active'
-                                }`}
-                              >
-                                {item.status === 'superseded_rejection'
-                                  ? 'Superseded Rejection'
-                                  : 'Active Prohibition'}
-                              </span>
-                            </div>
-
-                            <div className="rejection-reason-block">
-                              <span className="rejection-reason-label">Why:</span>
-                              <span>{item.reason}</span>
-                            </div>
-
-                            {item.currentStatusNote && (
-                              <div className="rejection-status-note">
-                                ↳ {item.currentStatusNote}
+                      ) : (
+                        <div className="dont-repeat-list">
+                          {dontRepeatItems.slice(0, 3).map((item) => (
+                            <div
+                              key={item.id}
+                              className={`rejection-card ${item.status === 'superseded_rejection' ? 'superseded' : ''}`}
+                            >
+                              <div className="rejection-header">
+                                <span className="rejection-item-text">{item.item}</span>
+                                <span
+                                  className={`rejection-badge ${
+                                    item.status === 'superseded_rejection'
+                                      ? 'rejection-badge-superseded'
+                                      : 'rejection-badge-active'
+                                  }`}
+                                >
+                                  {item.status === 'superseded_rejection' ? 'Superseded' : 'Active rejection'}
+                                </span>
                               </div>
-                            )}
-
-                            <div className="evidence-meta" style={{ marginTop: '10px' }}>
-                              <span className="evidence-meta-pill">
-                                When: {item.date ? new Date(item.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not recorded'}
-                              </span>
-                              <span className="evidence-meta-pill">Source: {item.source}</span>
-                              <button
-                                onClick={() =>
-                                  setExpandedRejectionEvidence((prev) => ({
-                                    ...prev,
-                                    [item.id]: !prev[item.id],
-                                  }))
-                                }
-                                className="btn btn-secondary"
-                                style={{ fontSize: '10.5px', padding: '2px 6px', height: 'auto' }}
-                              >
-                                {isExpanded ? 'Hide Evidence Quote' : 'View Source Quote'}
-                              </button>
-                            </div>
-
-                            {isExpanded && item.evidenceQuote && (
-                              <div className="evidence-quote" style={{ marginTop: '10px' }}>
-                                "{item.evidenceQuote}"
+                              <div className="rejection-reason-block">
+                                <span className="rejection-reason-label">Reason:</span>
+                                <span>{item.reason}</span>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* TAB 3: DECISION TIMELINE */}
-              {activeTab === 'timeline' && (
-                <div className="feature-view-container">
-                  <div className="feature-header">
-                    <div className="feature-title-group">
-                      <div className="feature-title">
-                        <span>•</span>
-                        Decision Timeline: Chronological Evolution
-                      </div>
-                      <div className="feature-subtitle">
-                        Tracks how client technical, operational, and architectural decisions evolved over time, highlighting when earlier decisions were superseded.
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => loadTimeline(selectedClient.id)}
-                      className="btn btn-secondary"
-                      style={{ fontSize: '12px' }}
-                      disabled={isLoadingTimeline}
-                    >
-                      {isLoadingTimeline ? 'Refreshing...' : 'Refresh Timeline'}
-                    </button>
                   </div>
 
-                  {timelineError && <div className="alert-box alert-error">{timelineError}</div>}
-
-                  {isLoadingTimeline ? (
-                    <div className="panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                      Retrieving chronological decisions from Hindsight...
-                    </div>
-                  ) : timelineDecisions.length === 0 ? (
-                    <div className="empty-continuity-state">
-                      <div className="empty-continuity-title">No recorded decisions found for this client.</div>
-                      <div className="empty-continuity-desc">
-                        No meeting transcripts have recorded any explicit technical or governance decisions for this client account.
+                  {/* Right Column: Decision Timeline Preview */}
+                  <div className="panel">
+                    <div className="panel-header">
+                      <div className="panel-header-left">
+                        <h3 className="panel-title">Decision timeline</h3>
+                        <p className="panel-subtitle">Chronological decision evolution</p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('timeline')}
+                        className="btn btn-secondary btn-sm"
+                      >
+                        View full timeline ({timelineDecisions.length})
+                      </button>
                     </div>
-                  ) : (
-                    <div className="timeline-container">
-                      <div className="timeline-track-line" />
-                      {timelineDecisions.map((d, index) => {
-                        const isExpanded = !!expandedTimelineEvidence[d.id];
-                        return (
-                          <div key={d.id} className="timeline-node">
-                            <span
-                              className={`timeline-marker-dot ${
-                                d.status === 'current' ? 'current' : 'superseded'
-                              }`}
-                            />
-                            <div className="timeline-card">
+
+                    <div className="panel-body">
+                      {isLoadingTimeline ? (
+                        <SkeletonRows count={3} />
+                      ) : timelineError ? (
+                        <ErrorBanner
+                          message="Couldn't load decision timeline"
+                          detail={timelineError}
+                          onRetry={() => loadTimeline(selectedClient.id)}
+                        />
+                      ) : timelineDecisions.length === 0 ? (
+                        <div className="empty-state">
+                          <h4 className="empty-state-title">No recorded decisions</h4>
+                          <p className="empty-state-desc">
+                            No explicit decisions, mandates, or approvals are currently recorded for this client.
+                          </p>
+                          <label htmlFor="overview-file-upload" className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                            Add meeting notes to start building memory
+                          </label>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {timelineDecisions.slice(0, 3).map((d) => (
+                            <div key={d.id} className="timeline-card">
                               <div className="timeline-card-header">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <span className="timeline-date-tag">
-                                    {d.date
-                                      ? new Date(d.date).toLocaleDateString(undefined, {
-                                          year: 'numeric',
-                                          month: 'short',
-                                          day: 'numeric',
-                                        })
-                                      : 'Date not recorded in memory'}
-                                  </span>
-                                  {d.topic && (
-                                    <span className="evidence-meta-pill" style={{ color: '#93c5fd' }}>
-                                      {d.topic}
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="timeline-date-tag">
+                                  {d.date
+                                    ? new Date(d.date).toLocaleDateString(undefined, {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                      })
+                                    : 'Date not recorded'}
+                                </span>
                                 <span
                                   className={`decision-status-badge ${
                                     d.status === 'current'
@@ -869,138 +763,465 @@ export default function ContextRelayApp() {
                                       : 'decision-badge-superseded'
                                   }`}
                                 >
-                                  {d.status === 'current' ? 'Current Known Decision' : 'Superseded'}
+                                  {d.status === 'current' ? 'Current' : 'Superseded'}
                                 </span>
                               </div>
-
                               <div className="decision-statement">{d.statement}</div>
-
                               {d.supersededBy && (
                                 <div className="decision-evolution-link">
-                                  <span className="evolution-arrow">↳</span>
-                                  <span>Superseded by later decision: "{d.supersededBy}"</span>
-                                </div>
-                              )}
-
-                              {d.supersedes && (
-                                <div className="decision-evolution-link" style={{ color: '#4ade80' }}>
-                                  <span className="evolution-arrow">↳</span>
-                                  <span>Supersedes prior decision: "{d.supersedes}"</span>
-                                </div>
-                              )}
-
-                              <div className="evidence-meta" style={{ marginTop: '10px' }}>
-                                <span className="evidence-meta-pill">Source: {d.source}</span>
-                                <button
-                                  onClick={() =>
-                                    setExpandedTimelineEvidence((prev) => ({
-                                      ...prev,
-                                      [d.id]: !prev[d.id],
-                                    }))
-                                  }
-                                  className="btn btn-secondary"
-                                  style={{ fontSize: '10.5px', padding: '2px 6px', height: 'auto' }}
-                                >
-                                  {isExpanded ? 'Hide Supporting Evidence' : 'View Supporting Evidence'}
-                                </button>
-                              </div>
-
-                              {isExpanded && d.supportingQuote && (
-                                <div className="evidence-quote" style={{ marginTop: '8px' }}>
-                                  "{d.supportingQuote}"
+                                  <span>Superseded by later decision: {d.supersededBy}</span>
                                 </div>
                               )}
                             </div>
-                          </div>
-                        );
-                      })}
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              )}
 
-              {/* TAB 4: HANDOFF BRIEF */}
-              {activeTab === 'handoff' && (
-                <div className="feature-view-container">
-                  <div className="feature-header">
-                    <div className="feature-title-group">
-                      <div className="feature-title">
-                        <span>•</span>
-                        Account Continuity Handover Brief
+                {/* Transcripts and Ingestion Panel */}
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-header-left">
+                      <h3 className="panel-title">Client transcripts and source documents</h3>
+                      <p className="panel-subtitle">Upload transcripts to build durable institutional memory</p>
+                    </div>
+                  </div>
+                  <div className="panel-body">
+                    <div className="upload-container">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".txt,.md"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        id="overview-file-upload"
+                        disabled={isUploading}
+                      />
+                      <label htmlFor="overview-file-upload" className={`upload-zone ${isUploading ? 'disabled' : ''}`}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                          <UploadCloud size={24} color="var(--primary)" />
+                        </div>
+                        <div className="upload-prompt">
+                          {isUploading
+                            ? 'Ingesting transcript into Hindsight memory...'
+                            : 'Drop meeting transcript (.txt or .md) here to retain durable context'}
+                        </div>
+                        <div className="upload-subtext">
+                          ContextRelay synchronously parses client statements, decisions, and rejections into long-term memory.
+                        </div>
+                      </label>
+                    </div>
+
+                    {uploadError && (
+                      <div style={{ marginTop: '12px' }}>
+                        <ErrorBanner
+                          message="Transcript ingestion failed"
+                          detail={uploadError}
+                        />
                       </div>
-                      <div className="feature-subtitle">
-                        Executive handover dossier for incoming account managers inheriting this account, synthesized from real recalled Hindsight memories.
+                    )}
+
+                    {/* Sources Table */}
+                    <div style={{ marginTop: '20px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                        Ingested source registry ({sources.length})
                       </div>
+                      {sources.length === 0 ? (
+                        <div className="empty-state" style={{ padding: '24px' }}>
+                          <p className="empty-state-desc" style={{ margin: 0 }}>
+                            No transcripts uploaded for this client yet.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="sources-table-wrap">
+                          <table className="sources-table">
+                            <thead>
+                              <tr>
+                                <th>File</th>
+                                <th>Status</th>
+                                <th>Size</th>
+                                <th>Ingested at</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sources.map((s) => (
+                                <tr key={s.id}>
+                                  <td className="font-mono">{s.original_filename}</td>
+                                  <td>
+                                    <span className={`status-pill ${s.ingestion_status}`}>
+                                      {s.ingestion_status === 'stored'
+                                        ? 'Stored'
+                                        : s.ingestion_status === 'processing'
+                                        ? 'Processing'
+                                        : 'Failed'}
+                                    </span>
+                                  </td>
+                                  <td className="font-mono text-muted">{Math.round(s.size_bytes / 1024)} KB</td>
+                                  <td className="font-mono text-muted">{new Date(s.created_at).toLocaleDateString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DON'T REPEAT THIS */}
+            {activeTab === 'dont-repeat' && (
+              <div className="feature-view-container">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-header-left">
+                      <h2 className="panel-title">Don't repeat this: client rejections and failed approaches</h2>
+                      <p className="panel-subtitle">
+                        Identifies client-specific rejected ideas, failed attempts, and disliked technologies so the next account manager avoids repeating past mistakes.
+                      </p>
                     </div>
                     <button
+                      type="button"
+                      onClick={() => loadDontRepeat(selectedClient.id)}
+                      className="btn btn-secondary btn-sm"
+                      disabled={isLoadingDontRepeat}
+                    >
+                      <RefreshCw size={13} />
+                      <span>{isLoadingDontRepeat ? 'Refreshing...' : 'Refresh rejections'}</span>
+                    </button>
+                  </div>
+
+                  <div className="panel-body">
+                    {dontRepeatError && (
+                      <ErrorBanner
+                        message="Couldn't load memory for this client"
+                        detail={dontRepeatError}
+                        onRetry={() => loadDontRepeat(selectedClient.id)}
+                      />
+                    )}
+
+                    {isLoadingDontRepeat ? (
+                      <SkeletonRows count={4} />
+                    ) : dontRepeatError ? null : dontRepeatItems.length === 0 ? (
+                      <div className="empty-state">
+                        <h3 className="empty-state-title">No recorded rejected approaches</h3>
+                        <p className="empty-state-desc">
+                          Add meeting notes to start building memory. No meeting transcripts have recorded any explicit client rejections, dislikes, or failed attempts for this workspace.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('overview')}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Upload transcripts in overview
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="dont-repeat-list">
+                        {dontRepeatItems.map((item) => {
+                          const isExpanded = !!expandedRejectionEvidence[item.id];
+                          return (
+                            <div
+                              key={item.id}
+                              className={`rejection-card ${item.status === 'superseded_rejection' ? 'superseded' : ''}`}
+                            >
+                              <div className="rejection-header">
+                                <span className="rejection-item-text">{item.item}</span>
+                                <span
+                                  className={`rejection-badge ${
+                                    item.status === 'superseded_rejection'
+                                      ? 'rejection-badge-superseded'
+                                      : 'rejection-badge-active'
+                                  }`}
+                                >
+                                  {item.status === 'superseded_rejection'
+                                    ? 'Superseded rejection'
+                                    : 'Active prohibition'}
+                                </span>
+                              </div>
+
+                              <div className="rejection-reason-block">
+                                <span className="rejection-reason-label">Why:</span>
+                                <span>{item.reason}</span>
+                              </div>
+
+                              {item.currentStatusNote && (
+                                <div className="rejection-status-note">
+                                  {item.currentStatusNote}
+                                </div>
+                              )}
+
+                              <div className="evidence-meta" style={{ marginTop: '6px' }}>
+                                <span className="evidence-meta-pill">
+                                  Date: {item.date ? new Date(item.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not recorded'}
+                                </span>
+                                <span className="evidence-meta-pill">Source: {item.source}</span>
+                                {item.evidenceQuote && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedRejectionEvidence((prev) => ({
+                                        ...prev,
+                                        [item.id]: !prev[item.id],
+                                      }))
+                                    }
+                                    className="btn btn-subtle btn-sm"
+                                  >
+                                    {isExpanded ? 'Hide evidence quote' : 'View source quote'}
+                                  </button>
+                                )}
+                              </div>
+
+                              {isExpanded && item.evidenceQuote && (
+                                <div className="evidence-quote">
+                                  "{item.evidenceQuote}"
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: DECISION TIMELINE */}
+            {activeTab === 'timeline' && (
+              <div className="feature-view-container">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-header-left">
+                      <h2 className="panel-title">Decision timeline: chronological evolution</h2>
+                      <p className="panel-subtitle">
+                        Tracks how client technical, operational, and architectural decisions evolved over time, highlighting when earlier decisions were superseded.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadTimeline(selectedClient.id)}
+                      className="btn btn-secondary btn-sm"
+                      disabled={isLoadingTimeline}
+                    >
+                      <RefreshCw size={13} />
+                      <span>{isLoadingTimeline ? 'Refreshing...' : 'Refresh timeline'}</span>
+                    </button>
+                  </div>
+
+                  <div className="panel-body">
+                    {timelineError && (
+                      <ErrorBanner
+                        message="Couldn't load memory for this client"
+                        detail={timelineError}
+                        onRetry={() => loadTimeline(selectedClient.id)}
+                      />
+                    )}
+
+                    {isLoadingTimeline ? (
+                      <SkeletonRows count={4} />
+                    ) : timelineError ? null : timelineDecisions.length === 0 ? (
+                      <div className="empty-state">
+                        <h3 className="empty-state-title">No recorded decisions</h3>
+                        <p className="empty-state-desc">
+                          Add meeting notes to start building memory. No meeting transcripts have recorded any explicit technical or governance decisions for this client account.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('overview')}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Upload transcripts in overview
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="timeline-container">
+                        <div className="timeline-track-line" />
+                        {timelineDecisions.map((d) => {
+                          const isExpanded = !!expandedTimelineEvidence[d.id];
+                          return (
+                            <div key={d.id} className="timeline-node">
+                              <span
+                                className={`timeline-marker-dot ${
+                                  d.status === 'current' ? 'current' : 'superseded'
+                                }`}
+                              />
+                              <div className="timeline-card">
+                                <div className="timeline-card-header">
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span className="timeline-date-tag">
+                                      {d.date
+                                        ? new Date(d.date).toLocaleDateString(undefined, {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                          })
+                                        : 'Date not recorded'}
+                                    </span>
+                                    {d.topic && (
+                                      <span className="evidence-meta-pill">
+                                        {d.topic}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`decision-status-badge ${
+                                      d.status === 'current'
+                                        ? 'decision-badge-current'
+                                        : 'decision-badge-superseded'
+                                    }`}
+                                  >
+                                    {d.status === 'current' ? 'Current known decision' : 'Superseded'}
+                                  </span>
+                                </div>
+
+                                <div className="decision-statement">{d.statement}</div>
+
+                                {d.supersededBy && (
+                                  <div className="decision-evolution-link">
+                                    <span>Superseded by later decision: "{d.supersededBy}"</span>
+                                  </div>
+                                )}
+
+                                {d.supersedes && (
+                                  <div className="decision-evolution-link">
+                                    <span>Supersedes prior decision: "{d.supersedes}"</span>
+                                  </div>
+                                )}
+
+                                <div className="evidence-meta" style={{ marginTop: '6px' }}>
+                                  <span className="evidence-meta-pill">Source: {d.source}</span>
+                                  {d.supportingQuote && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedTimelineEvidence((prev) => ({
+                                          ...prev,
+                                          [d.id]: !prev[d.id],
+                                        }))
+                                      }
+                                      className="btn btn-subtle btn-sm"
+                                    >
+                                      {isExpanded ? 'Hide supporting evidence' : 'View supporting evidence'}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {isExpanded && d.supportingQuote && (
+                                  <div className="evidence-quote">
+                                    "{d.supportingQuote}"
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: HANDOFF BRIEF */}
+            {activeTab === 'handoff' && (
+              <div className="feature-view-container">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-header-left">
+                      <h2 className="panel-title">Account continuity handover brief</h2>
+                      <p className="panel-subtitle">
+                        Executive handover dossier for incoming account managers inheriting this account, synthesized from real recalled Hindsight memories.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
                       onClick={handleGenerateHandoff}
                       className="btn btn-primary"
                       disabled={isGeneratingHandoff}
                     >
-                      {isGeneratingHandoff ? 'Synthesizing Brief...' : 'Generate / Refresh Brief'}
+                      {isGeneratingHandoff ? (
+                        <>
+                          <span className="spinner" />
+                          <span>Synthesizing brief...</span>
+                        </>
+                      ) : (
+                        <span>Generate / refresh brief</span>
+                      )}
                     </button>
                   </div>
 
-                  {/* Cross-Link Bar linking all three features */}
-                  <div className="handoff-cross-link-bar">
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', alignSelf: 'center', fontWeight: 600 }}>
-                      CONTINUITY DEEP DIVES:
+                  {/* Cross-Link Bar linking features */}
+                  <div className="handoff-cross-link-bar" style={{ borderBottom: '1px solid var(--border-subtle)', borderRadius: 0 }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      Continuity deep dives:
                     </span>
                     <button
+                      type="button"
                       onClick={() => setActiveTab('dont-repeat')}
                       className="handoff-cross-link-btn"
                     >
-                      <span>🚫</span>
-                      <span>Review Don't Repeat This ({dontRepeatItems.length})</span>
+                      <Ban size={14} />
+                      <span>Review don't repeat this ({dontRepeatItems.length})</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setActiveTab('timeline')}
                       className="handoff-cross-link-btn"
                     >
-                      <span>⏱️</span>
-                      <span>Explore Decision Timeline ({timelineDecisions.length})</span>
+                      <Clock size={14} />
+                      <span>Explore decision timeline ({timelineDecisions.length})</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => setActiveTab('query')}
                       className="handoff-cross-link-btn"
                     >
-                      <span>💬</span>
-                      <span>Ask Targeted Question</span>
+                      <MessageSquare size={14} />
+                      <span>Ask targeted question</span>
                     </button>
                   </div>
 
-                  {handoffError && <div className="alert-box alert-error">{handoffError}</div>}
+                  <div className="panel-body">
+                    {handoffError && (
+                      <ErrorBanner
+                        message="Couldn't load memory for this client"
+                        detail={handoffError}
+                        onRetry={handleGenerateHandoff}
+                      />
+                    )}
 
-                  {isGeneratingHandoff ? (
-                    <div className="panel" style={{ padding: '60px 40px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                        Compiling Account Handover Dossier...
+                    {isGeneratingHandoff ? (
+                      <div className="empty-state">
+                        <span className="spinner" style={{ width: '24px', height: '24px', marginBottom: '12px', color: 'var(--primary)' }} />
+                        <h3 className="empty-state-title">Compiling account handover dossier...</h3>
+                        <p className="empty-state-desc">
+                          Retrieving decisions, rejections, stakeholder authorities, and constraints from Hindsight memory bank.
+                        </p>
+                        <SkeletonRows count={3} />
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '420px', margin: 'auto' }}>
-                        Retrieving decisions, rejections, stakeholder authorities, and constraints from Hindsight memory bank.
-                      </div>
-                    </div>
-                  ) : handoffResult ? (
-                    <div>
-                      {handoffResult.hasEvidence ? (
-                        <div className="panel" style={{ borderLeft: '3px solid #3b82f6' }}>
-                          <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span className="panel-title">
-                              HANDOVER DOSSIER: {handoffResult.clientName}
-                            </span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(handoffResult.brief);
-                                alert('Handover brief copied to clipboard');
-                              }}
-                              className="btn btn-secondary"
-                              style={{ fontSize: '11px', padding: '3px 8px' }}
-                            >
-                              Copy Dossier
-                            </button>
-                          </div>
-                          <div className="panel-body">
-                            <div className="answer-text" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.65' }}>
+                    ) : handoffError ? null : handoffResult ? (
+                      <div>
+                        {handoffResult.hasEvidence ? (
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                HANDOVER DOSSIER: {handoffResult.clientName}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyBrief(handoffResult.brief)}
+                                className="btn btn-secondary btn-sm"
+                              >
+                                {copiedBrief ? <Check size={13} /> : <Copy size={13} />}
+                                <span>{copiedBrief ? 'Copied to clipboard' : 'Copy dossier'}</span>
+                              </button>
+                            </div>
+
+                            <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.65', color: 'var(--text-title)', fontSize: '14px' }}>
                               {handoffResult.brief}
                             </div>
 
@@ -1011,11 +1232,11 @@ export default function ContextRelayApp() {
                                 className="evidence-header"
                               >
                                 <div className="evidence-title">
-                                  <span>{expandedHandoffEvidence ? '▾' : '▸'}</span>
-                                  <span>VERIFIABLE EVIDENCE AUDIT TRAIL</span>
+                                  {expandedHandoffEvidence ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                  <span>Verifiable evidence audit trail</span>
                                 </div>
                                 <span className="evidence-count-tag">
-                                  {handoffResult.evidence.length} RECALLED FACTS
+                                  {handoffResult.evidence.length} recalled facts
                                 </span>
                               </div>
 
@@ -1044,181 +1265,204 @@ export default function ContextRelayApp() {
                               )}
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="empty-continuity-state">
-                          <div className="empty-continuity-title">No client memory recorded</div>
-                          <div className="empty-continuity-desc">
-                            {handoffResult.message || 'No relevant stored client memory found to generate a handoff brief. Please ingest meeting transcripts first.'}
+                        ) : (
+                          <div className="empty-state">
+                            <h3 className="empty-state-title">No client memory recorded</h3>
+                            <p className="empty-state-desc">
+                              {handoffResult.message || 'No relevant stored client memory found to generate a handoff brief. Please ingest meeting transcripts first.'}
+                            </p>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="empty-continuity-state">
-                      <div className="empty-continuity-title">Handover Brief Not Yet Prepared</div>
-                      <div className="empty-continuity-desc">
-                        Click "Generate / Refresh Brief" to synthesize an executive briefing covering active decisions, stakeholder roles, and what the client rejected.
+                        )}
                       </div>
-                      <button
-                        onClick={handleGenerateHandoff}
-                        className="btn btn-primary"
-                        style={{ marginTop: '12px' }}
-                      >
-                        Prepare Handoff Brief Now
-                      </button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="empty-state">
+                        <h3 className="empty-state-title">Handover brief not yet prepared</h3>
+                        <p className="empty-state-desc">
+                          Click "Prepare handoff brief" to synthesize an executive briefing covering active decisions, stakeholder roles, and what the client rejected.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleGenerateHandoff}
+                          className="btn btn-primary"
+                        >
+                          Prepare handoff brief now
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* TAB 5: ASK MEMORY (CONTINUITY QUERY) */}
-              {activeTab === 'query' && (
-                <div className="feature-view-container">
-                  <div className="feature-header">
-                    <div className="feature-title-group">
-                      <div className="feature-title">
-                        <span>•</span>
-                        Ask Memory: Targeted Continuity Queries
-                      </div>
-                      <div className="feature-subtitle">
+            {/* TAB 5: ASK MEMORY (CONTINUITY QUERY) */}
+            {activeTab === 'query' && (
+              <div className="feature-view-container">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-header-left">
+                      <h2 className="panel-title">Ask memory: targeted continuity queries</h2>
+                      <p className="panel-subtitle">
                         Ask specific questions about past client decisions, constraints, or agreements. Strictly grounded in Hindsight evidence.
-                      </div>
+                      </p>
                     </div>
                   </div>
 
-                  <div className="panel">
-                    <div className="panel-body">
-                      <form onSubmit={handleQuerySubmit}>
-                        <div className="input-group">
-                          <label className="input-label">Query Client Memory</label>
-                          <textarea
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            placeholder="e.g. What database did Sarah approve? What did the client reject in kickoff?"
-                            rows={3}
-                            className="input-textarea"
-                            disabled={isQuerying}
-                          />
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                            Answers are strictly synthesized from recalled evidence.
-                          </span>
-                          <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={isQuerying || !question.trim()}
-                          >
-                            {isQuerying ? 'Recalling...' : 'Query Memory'}
-                          </button>
-                        </div>
-                      </form>
-
-                      {/* Suggested continuity queries */}
-                      <div className="continuity-prompts">
-                        <span className="continuity-prompts-label">SUGGESTED CONTINUITY QUESTIONS:</span>
-                        <div className="continuity-prompts-list">
-                          <button
-                            type="button"
-                            onClick={() => setQuestion('What database was approved or changed across our meetings?')}
-                            className="continuity-chip"
-                          >
-                            What database was approved or changed?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setQuestion('Who has final approval authority for budget changes versus design deliverables?')}
-                            className="continuity-chip"
-                          >
-                            Who has budget vs deliverable sign-off?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setQuestion('What technical approaches or tools did the client explicitly reject?')}
-                            className="continuity-chip"
-                          >
-                            What tools did the client reject?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setQuestion('Did the portal launch timeline or beta date change?')}
-                            className="continuity-chip"
-                          >
-                            Did the launch date change?
-                          </button>
-                        </div>
+                  <div className="panel-body">
+                    <form onSubmit={handleQuerySubmit}>
+                      <div className="input-group">
+                        <label className="input-label" htmlFor="query-input">
+                          Query client memory
+                        </label>
+                        <textarea
+                          id="query-input"
+                          value={question}
+                          onChange={(e) => setQuestion(e.target.value)}
+                          placeholder="e.g. What database did Sarah approve? What did the client reject in kickoff?"
+                          rows={3}
+                          className="input-textarea"
+                          disabled={isQuerying}
+                        />
                       </div>
 
-                      {queryError && <div className="alert-box alert-error" style={{ marginTop: '14px' }}>{queryError}</div>}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Answers are strictly synthesized from recalled evidence.
+                        </span>
+                        <button
+                          type="submit"
+                          className="btn btn-primary"
+                          disabled={isQuerying || !question.trim()}
+                        >
+                          {isQuerying ? (
+                            <>
+                              <span className="spinner" />
+                              <span>Recalling...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Search size={14} />
+                              <span>Ask</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
 
-                      {/* Answer Card */}
-                      {queryResult && (
-                        <div className="answer-card panel" style={{ marginTop: '20px' }}>
-                          <div className="panel-body">
-                            <div className="answer-header">
-                              <span className="answer-title">GROUNDED CONTINUITY RESPONSE</span>
-                              <span className={`status-pill ${queryResult.hasEvidence ? 'stored' : 'failed'}`}>
-                                {queryResult.hasEvidence ? 'EVIDENCE FOUND' : 'NO RECORDED MEMORY'}
-                              </span>
-                            </div>
-                            <div className="answer-text">{queryResult.answer}</div>
+                    {/* Suggested Continuity Queries */}
+                    <div className="continuity-prompts">
+                      <span className="continuity-prompts-label">SUGGESTED CONTINUITY QUESTIONS:</span>
+                      <div className="continuity-prompts-list">
+                        <button
+                          type="button"
+                          onClick={() => setQuestion('What database was approved or changed across our meetings?')}
+                          className="continuity-chip"
+                        >
+                          What database was approved or changed?
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuestion('Who has final approval authority for budget changes versus design deliverables?')}
+                          className="continuity-chip"
+                        >
+                          Who has budget vs deliverable sign-off?
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuestion('What technical approaches or tools did the client explicitly reject?')}
+                          className="continuity-chip"
+                        >
+                          What tools did the client reject?
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuestion('Did the portal launch timeline or beta date change?')}
+                          className="continuity-chip"
+                        >
+                          Did the launch date change?
+                        </button>
+                      </div>
+                    </div>
 
-                            {/* Verifiable Evidence Drawer */}
-                            {queryResult.hasEvidence && (
-                              <div className="evidence-section">
-                                <div
-                                  onClick={() => setExpandedQueryEvidence(!expandedQueryEvidence)}
-                                  className="evidence-header"
-                                >
-                                  <div className="evidence-title">
-                                    <span>{expandedQueryEvidence ? '▾' : '▸'}</span>
-                                    <span>VERIFIABLE EVIDENCE DRAWER</span>
-                                  </div>
-                                  <span className="evidence-count-tag">
-                                    {queryResult.evidence.length} STORED FACTS
-                                  </span>
+                    {queryError && (
+                      <div style={{ marginTop: '16px' }}>
+                        <ErrorBanner
+                          message="Query processing failed"
+                          detail={queryError}
+                          onRetry={handleQuerySubmit}
+                        />
+                      </div>
+                    )}
+
+                    {/* Answer Card */}
+                    {queryResult && (
+                      <div className="panel" style={{ marginTop: '20px', borderLeft: '3px solid var(--primary)' }}>
+                        <div className="panel-body">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                              GROUNDED CONTINUITY RESPONSE
+                            </span>
+                            <span className={`status-pill ${queryResult.hasEvidence ? 'stored' : 'failed'}`}>
+                              {queryResult.hasEvidence ? 'Evidence found' : 'No recorded memory'}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-title)', whiteSpace: 'pre-wrap' }}>
+                            {queryResult.answer}
+                          </div>
+
+                          {/* Verifiable Evidence Drawer / Sources */}
+                          {queryResult.hasEvidence && (
+                            <div className="evidence-section" style={{ marginTop: '20px' }}>
+                              <div
+                                onClick={() => setExpandedQueryEvidence(!expandedQueryEvidence)}
+                                className="evidence-header"
+                              >
+                                <div className="evidence-title">
+                                  {expandedQueryEvidence ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                  <span>Sources and verifiable evidence</span>
                                 </div>
+                                <span className="evidence-count-tag">
+                                  {queryResult.evidence.length} stored facts
+                                </span>
+                              </div>
 
-                                {expandedQueryEvidence && (
-                                  <div className="evidence-list">
-                                    {queryResult.evidence.map((item, idx) => (
-                                      <div key={item.id || idx} className="evidence-item">
-                                        <div className="evidence-item-fact">{item.text}</div>
-                                        <div className="evidence-meta">
-                                          <span className="evidence-meta-pill">Type: {item.type}</span>
-                                          {item.occurredStart && (
-                                            <span className="evidence-meta-pill">Date: {item.occurredStart}</span>
-                                          )}
-                                          {item.documentId && (
-                                            <span className="evidence-meta-pill">Document: {item.documentId}</span>
-                                          )}
-                                        </div>
-                                        {item.sourceChunk && (
-                                          <div className="evidence-quote">
-                                            "{item.sourceChunk.trim()}"
-                                          </div>
+                              {expandedQueryEvidence && (
+                                <div className="evidence-list">
+                                  {queryResult.evidence.map((item, idx) => (
+                                    <div key={item.id || idx} className="evidence-item">
+                                      <div className="evidence-item-fact">{item.text}</div>
+                                      <div className="evidence-meta">
+                                        <span className="evidence-meta-pill">Type: {item.type}</span>
+                                        {item.occurredStart && (
+                                          <span className="evidence-meta-pill">Date: {item.occurredStart}</span>
+                                        )}
+                                        {item.documentId && (
+                                          <span className="evidence-meta-pill">Document: {item.documentId}</span>
                                         )}
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                                      {item.sourceChunk && (
+                                        <div className="evidence-quote">
+                                          "{item.sourceChunk.trim()}"
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : (
           <div className="empty-hero">
             <div className="empty-hero-icon">CR</div>
-            <h2 className="empty-hero-title">Select a Client Account to Begin</h2>
+            <h2 className="empty-hero-title">Select a client account to begin</h2>
             <p className="empty-hero-desc">
               ContextRelay maintains durable client institutional memory across account manager transitions.
               Register or select a client workspace on the left to review historical decisions, rejected approaches, and handover briefs.
@@ -1237,8 +1481,13 @@ export default function ContextRelayApp() {
                 <span>Strictly grounded LLM responses backed by verifiable transcript evidence.</span>
               </div>
             </div>
-            <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-              Register First Client
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="btn btn-primary"
+            >
+              <Plus size={14} />
+              <span>Register first client</span>
             </button>
           </div>
         )}
@@ -1248,14 +1497,15 @@ export default function ContextRelayApp() {
       {showCreateModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">Register Client Workspace</h3>
+            <h3 className="modal-title">Register client workspace</h3>
             <p className="modal-desc">
               Each client receives a dedicated, isolated Hindsight memory bank to ensure strict confidentiality.
             </p>
             <form onSubmit={handleCreateClient}>
               <div className="input-group">
-                <label className="input-label">Client Name</label>
+                <label className="input-label" htmlFor="new-client-name">Client name</label>
                 <input
+                  id="new-client-name"
                   type="text"
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
@@ -1279,7 +1529,14 @@ export default function ContextRelayApp() {
                   className="btn btn-primary"
                   disabled={isCreatingClient || !newClientName.trim()}
                 >
-                  {isCreatingClient ? 'Registering...' : 'Register Workspace'}
+                  {isCreatingClient ? (
+                    <>
+                      <span className="spinner" />
+                      <span>Registering...</span>
+                    </>
+                  ) : (
+                    <span>Register workspace</span>
+                  )}
                 </button>
               </div>
             </form>

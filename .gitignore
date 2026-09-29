@@ -26,3 +26,11 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+.env
+.env.local
+.env*.local
+
+.env
+.env.local
+.env*.local
