@@ -3,7 +3,7 @@
 **Durable Client Memory for Agency Account Continuity**
 
 Viora helps agencies preserve the decisions, preferences, history, and institutional knowledge built up during client relationships.
-
+ 
 When an account manager changes, teams shouldn't have to rediscover what the previous person already learned.
 
 Viora uses **Hindsight as a durable memory layer** so an AI agent can retain client knowledge, recall relevant history, and provide context-aware assistance over time.
