@@ -10,7 +10,7 @@ Viora uses **Hindsight as a durable memory layer** so an AI agent can retain cli
 
 ---
 
-## 🚨 The Problem
+## 🚨 The Problem 
 
 Agency-client relationships generate a huge amount of knowledge:
 
